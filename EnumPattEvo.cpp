@@ -36,6 +36,7 @@ struct mainarr
 	//int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
 	int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
 	vector<unsigned long long int> clist,gbcl;
+	vector<int> trgbcl;
 	
 	bool cellvalue (int x, int y)
 	{	
@@ -64,13 +65,15 @@ struct mainarr
 	set<int> totrans()
 	{
 		set<int> arrout;
+		int y=0;
 		for(auto i : gbcl)
 		{
-			int q=trans(rv(i,0),rv(i,1));
+			int q=trgbcl[y];
 			if (translist[q]==2)
 			{
 				arrout.insert(q);
 			}
+			y++;
 		}
 		return arrout;
 	}
@@ -78,12 +81,14 @@ struct mainarr
 	vector<unsigned long long int> evolve(int t[102])
 	{
 		vector<unsigned long long int> tmp;
+		int y=0;
 		for(unsigned long long int v : gbcl)
 		{
-			if(t[trans(rv(v,0),rv(v,1))]==1)
+			if(t[trgbcl[y]]==1)
 			{
 				tmp.push_back(v);
 			}
+			y++;
 		}
 		sort(tmp.begin(),tmp.end());
 		return tmp;
@@ -103,7 +108,13 @@ struct mainarr
 			}
 		}
 		sort(tmp.begin(),tmp.end());
+		vector<int> tmp2;
 		gbcl=tmp;
+		for (int k=0;k<gbcl.size();k++)
+		{
+			tmp2.push_back(trans(rv(gbcl[k],0),rv(gbcl[k],1)));
+		}
+		trgbcl=tmp2;
 	}
 };
 
