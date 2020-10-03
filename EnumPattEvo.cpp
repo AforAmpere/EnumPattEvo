@@ -11,7 +11,7 @@
 #define MINPOP 1
 #define MAXX 5
 #define MAXY 5
-#define MAXGEN 10000
+#define MAXGEN 1000
 
 using namespace std;
 
@@ -165,12 +165,12 @@ __int128 intpow(int y)
 	return t << y;
 }
 
-char* printint128(__int128 n)
+void printint128(__int128 n)
 {
 	if (n == 0)  
 		cout << '0';
 	char str[40] = {0};
-	char *s = str + sizeof(str) - 1;
+	char *s = str + 39;
 	while (n != 0) 
 	{
 		*--s = "0123456789"[n % 10];
@@ -404,10 +404,11 @@ bool checktrans(mainarr next,int n)
 void branch(int n)
 {
 	set<int> trstr = arr[n].totrans();
-	for(__int128 i=0;i<intpow(trstr.size());i++)
+	__int128 b = intpow(trstr.size());
+	for(__int128 i=0;i<b;i++)
 	{
 		inc++;
-		postotalindex[n][0]=i;postotalindex[n][1]=intpow(trstr.size());
+		postotalindex[n][0]=i;postotalindex[n][1]=b;
 		if(inc%250000==0)
 		{
 			cout << "Depth: " << n+1 << ", progress: ";
@@ -483,14 +484,13 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	outfile.open("supertest.txt");
-	outfile << RLE << endl << endl;
 	outfile.close();
 	arr[0].clist = RLEtocelllist(RLE);
 	arr[0].updategbcl();
-	cout << endl;
 	initsymm=symmetry(arr[0]);
-	cout << "initsymm: " << initsymm<<endl;
+	cout << "initsymm: " << initsymm << endl;
 	outfile.open("supertest.txt",ios_base::app);
+	outfile << RLE << endl << endl;
 	branch(0);
 	outfile.close();
 	cout << "time: " << chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - t1).count() << " seconds, patterns: " << pattcount << ", inc: " << inc << endl;
