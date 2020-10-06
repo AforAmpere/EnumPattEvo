@@ -9,7 +9,7 @@ To run, do ./EnumPattEvo 'RLE' OutputFile. The RLE must be in quotes, and at the
 For example, 'o3bo2$2b2o!' becomes 'obbbo$$bboo!'. The output file is optional, if none is specified, it will be sent to 'Output - EnumPattEvo.txt'.
 
 The maximum size the pattern can attain, the maximum population it can get to, and the maximum generation depth to search to are specified at the top of the source file.
-A good test run is to set MAXPOP to 100, MINPOP to 1, MAXX and MAXY at 5, and MAXGEN to 1000, then run 
+The source must be recompiled for any change to these parameters. A good test run is to set MAXPOP to 100, MINPOP to 1, MAXX and MAXY at 5, and MAXGEN to 1000, recompile, then run: 
 
 ./EnumPattEvo 'obo!'.
 
