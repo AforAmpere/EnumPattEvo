@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <set>
 #include <string>
 #include <ctime>
 #include <chrono>
@@ -33,7 +32,7 @@ int rv(unsigned long long int hsh,bool w)
 
 struct mainarr
 {
-	//int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
+	//int translist[102]= {0,0,0,1,0,0,1,0,0,2,1,2,0,0,0,0,2,0,0,0,2,2,0,1,0,2,2,2,1,1,2,2,2,0,1,2,1,1,1,2,0,1,0,2,2,2,1,2,2,2,0,0,0,1,0,2,2,0,1,0,2,1,1,1,0,2,0,1,1,1,2,0,2,0,0,0,2,1,2,0,1,1,2,1,1,2,0,0,2,0,2,2,2,1,2,2,1,2,2,2,1,1};
 	int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
 	vector<unsigned long long int> clist,gbcl;
 	vector<int> trgbcl;
@@ -41,15 +40,6 @@ struct mainarr
 	bool cellvalue (int x, int y)
 	{	
 		return (binary_search(clist.begin(),clist.end(),hsh(x,y)));
-	}
-	
-	bool cellvalue (int x, int y, vector<unsigned long long int> tmp)
-	{	
-		for(unsigned long long int k : tmp)
-		{
-			if (hsh(x,y)==k) return 1;
-		}
-		return 0;
 	}
 	
 	int trans(int x, int y)
@@ -62,19 +52,21 @@ struct mainarr
 		return translookup[r];
 	}
 	
-	set<int> totrans()
+	vector<int> totrans()
 	{
-		set<int> arrout;
+		vector<int> arrout;
 		int y=0;
 		for(auto i : gbcl)
 		{
 			int q=trgbcl[y];
 			if (translist[q]==2)
 			{
-				arrout.insert(q);
+				arrout.push_back(q);
 			}
 			y++;
 		}
+		sort(arrout.begin(),arrout.end());
+		arrout.erase( unique( arrout.begin(), arrout.end() ), arrout.end() );
 		return arrout;
 	}
 	
@@ -103,13 +95,14 @@ struct mainarr
 			{
 				for(int k=-1;k<=1;k++)
 				{
-					if(!(cellvalue(rv(v,0)+j,rv(v,1)+k,tmp))) tmp.push_back(hsh(rv(v,0)+j,rv(v,1)+k));
+					tmp.push_back(hsh(rv(v,0)+j,rv(v,1)+k));
 				}
 			}
 		}
 		sort(tmp.begin(),tmp.end());
+		tmp.erase( unique( tmp.begin(), tmp.end() ), tmp.end() );
 		vector<int> tmp2;
-		gbcl=tmp;
+		gbcl.assign(tmp.begin(),tmp.end());
 		for (int k=0;k<gbcl.size();k++)
 		{
 			tmp2.push_back(trans(rv(gbcl[k],0),rv(gbcl[k],1)));
@@ -123,9 +116,8 @@ int initsymm=8;
 
 bool compareclist(mainarr i,mainarr j)
 {
-	if((initsymm==1||initsymm==2||initsymm==4||initsymm==5||initsymm==6||initsymm==7) && i.clist==j.clist) return 1;
+	if((initsymm*(initsymm-3)) && i.clist==j.clist) return 1;
 	if (i.clist.size() != j.clist.size()) return 0;
-	sort(i.clist.begin(),i.clist.end());sort(j.clist.begin(),j.clist.end());
 	unsigned long long int k = (i.clist[0])-(j.clist[0]);
 	for(int q=1;q<i.clist.size();q++)
 	{
@@ -179,7 +171,7 @@ void printint128(__int128 n)
 	cout << s;
 }
 
-mainarr combo(mainarr curr, set<int> tlist, __int128 index)
+mainarr combo(mainarr curr, vector<int> tlist, __int128 index)
 {
 	const int y = tlist.size();
 	int binlist[y];
@@ -195,20 +187,16 @@ mainarr combo(mainarr curr, set<int> tlist, __int128 index)
 		{
 			next.translist[i] = curr.translist[i];
 		}
-		else if(tlist.find(i) != tlist.end())
-		{
-			next.translist[i] = binlist[distance(tlist.begin(),tlist.find(i))];
-		}
-		else
-		{
-			next.translist[i] = 2;
-		}
+	}
+	for (int j=0;j<y;j++)
+	{
+		next.translist[tlist[j]] = binlist[j];
 	}
 	next.clist = curr.evolve(next.translist);
 	return next;
 }
 
-int inc=0;
+long long int inc=0;
 int pattcount=0;
 __int128 postotalindex[MAXGEN+1][2];
 
@@ -391,7 +379,7 @@ bool checktrans(mainarr next,int n)
 							outfile << intlookup[i%51];
 						}
 					}
-					outfile << ": (" << rv(nxf,0)-rv(arr[i].clist[0],0) << "," << rv(nxf,1)-rv(arr[i].clist[0],1) << ")/" << n-i+1 << endl;
+					outfile << ": (" << rv(nxf,0)-rv(arr[0].clist[0],0) << "," << rv(nxf,1)-rv(arr[0].clist[0],1) << ")/" << n-i+1 << endl;
 					pattcount++;
 				}
 				return 0;
@@ -403,7 +391,7 @@ bool checktrans(mainarr next,int n)
 
 void branch(int n)
 {
-	set<int> trstr = arr[n].totrans();
+	vector<int> trstr = arr[n].totrans();
 	__int128 b = intpow(trstr.size());
 	for(__int128 i=0;i<b;i++)
 	{
@@ -474,7 +462,8 @@ int main(int argc, char **argv)
 	// outfile2.open("supertesttree.txt");
 	// outfile2.close();
 	string RLE;
-	if (argc >1)
+	string file = "Output - EnumPattEvo.txt";
+	if (argc > 1)
 	{
 		RLE = argv[1];
 	}
@@ -483,13 +472,17 @@ int main(int argc, char **argv)
 		cout << "Input RLE missing"<< endl;
 		return 0;
 	}
-	outfile.open("supertest.txt");
+	if (argc > 2)
+	{
+		file = argv[2];
+	}
+	outfile.open(file);
 	outfile.close();
 	arr[0].clist = RLEtocelllist(RLE);
 	arr[0].updategbcl();
 	initsymm=symmetry(arr[0]);
 	cout << "initsymm: " << initsymm << endl;
-	outfile.open("supertest.txt",ios_base::app);
+	outfile.open(file,ios_base::app);
 	outfile << RLE << endl << endl;
 	branch(0);
 	outfile.close();
