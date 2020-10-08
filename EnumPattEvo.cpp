@@ -21,35 +21,34 @@ const char *intlookup[51]={"0","1c","1e","2c","2e","2k","2a","2i","2n","3c","3e"
 
 unsigned long long int hsh (int x, int y)
 {
-	return (x+((unsigned long long int)y<<32)+((unsigned long long int)1<<31)+((unsigned long long int)1<<63));
+	return (x+((unsigned long long int)y<<32)-(-1<<31)+((unsigned long long int)1<<63));
 }
 
 int rv(unsigned long long int hsh,bool w)
 {
-	if(!w) return (hsh%((unsigned long long int)1<<32)-(1<<31));
+	if(!w) return (hsh%((unsigned long long int)1<<32)+(-1<<31));
 	return ((hsh>>32) - (1<<31));
 }
 
 struct mainarr
 {
-	//int translist[102]= {0,0,0,1,0,0,1,0,0,2,1,2,0,0,0,0,2,0,0,0,2,2,0,1,0,2,2,2,1,1,2,2,2,0,1,2,1,1,1,2,0,1,0,2,2,2,1,2,2,2,0,0,0,1,0,2,2,0,1,0,2,1,1,1,0,2,0,1,1,1,2,0,2,0,0,0,2,1,2,0,1,1,2,1,1,2,0,0,2,0,2,2,2,1,2,2,1,2,2,2,1,1};
 	int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
+	//int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
 	vector<unsigned long long int> clist,gbcl;
 	vector<int> trgbcl;
 	
-	bool cellvalue (int x, int y)
-	{	
-		return (binary_search(clist.begin(),clist.end(),hsh(x,y)));
-	}
-	
-	int trans(int x, int y)
+	int trans(unsigned long long h)
 	{
-		int i=0,r=0;
-		while (i<9)
-		{
-			r+=(cellvalue(x+i/3-1,y+i%3-1))<<(i++);
-		}
-		return translookup[r];
+		return translookup[
+		(binary_search(clist.begin(),clist.end(),h-((unsigned long long int)1<<32)-1))+
+		(binary_search(clist.begin(),clist.end(),h-((unsigned long long int)1<<32))<<1)+
+		(binary_search(clist.begin(),clist.end(),h-((unsigned long long int)1<<32)+1)<<2)+
+		(binary_search(clist.begin(),clist.end(),h-1)<<3)+
+		(binary_search(clist.begin(),clist.end(),h)<<4)+
+		(binary_search(clist.begin(),clist.end(),h+1)<<5)+
+		(binary_search(clist.begin(),clist.end(),h+((unsigned long long int)1<<32)-1)<<6)+
+		(binary_search(clist.begin(),clist.end(),h+((unsigned long long int)1<<32))<<7)+
+		(binary_search(clist.begin(),clist.end(),h+((unsigned long long int)1<<32)+1)<<8)];
 	}
 	
 	vector<int> totrans()
@@ -100,12 +99,13 @@ struct mainarr
 			}
 		}
 		sort(tmp.begin(),tmp.end());
-		tmp.erase( unique( tmp.begin(), tmp.end() ), tmp.end() );
+		tmp.erase(unique(tmp.begin(),tmp.end()),tmp.end());
 		vector<int> tmp2;
 		gbcl.assign(tmp.begin(),tmp.end());
 		for (int k=0;k<gbcl.size();k++)
 		{
-			tmp2.push_back(trans(rv(gbcl[k],0),rv(gbcl[k],1)));
+			//tmp2.push_back(trans(rv(gbcl[k],0),rv(gbcl[k],1)));
+			tmp2.push_back(trans(gbcl[k]));
 		}
 		trgbcl=tmp2;
 	}
@@ -116,7 +116,7 @@ int initsymm=8;
 
 bool compareclist(mainarr i,mainarr j)
 {
-	if((initsymm*(initsymm-3)) && i.clist==j.clist) return 1;
+	if(i.clist==j.clist) return 1;
 	if (i.clist.size() != j.clist.size()) return 0;
 	unsigned long long int k = (i.clist[0])-(j.clist[0]);
 	for(int q=1;q<i.clist.size();q++)
@@ -153,8 +153,7 @@ vector<unsigned long long int> RLEtocelllist(string RLE)
 
 __int128 intpow(int y)
 {
-	__int128 t = 1;
-	return t << y;
+	return (__int128)1 << y;
 }
 
 void printint128(__int128 n)
@@ -397,7 +396,7 @@ void branch(int n)
 	{
 		inc++;
 		postotalindex[n][0]=i;postotalindex[n][1]=b;
-		if(inc%250000==0)
+		if(inc%500000==0)
 		{
 			cout << "Depth: " << n+1 << ", progress: ";
 			for(int q=0; q<n+1;q++)
