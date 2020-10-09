@@ -8,9 +8,9 @@
 
 #define MAXPOP 100
 #define MINPOP 1
-#define MAXX 5
-#define MAXY 5
-#define MAXGEN 1000
+#define MAXX 3
+#define MAXY 3
+#define MAXGEN 10
 
 using namespace std;
 
@@ -126,6 +126,18 @@ bool compareclist(mainarr i,mainarr j)
 	return 1;
 }
 
+bool compareclist(vector<unsigned long long> i,vector<unsigned long long> j)
+{
+	if(i==j) return 1;
+	if (i.size() != j.size()) return 0;
+	unsigned long long int k = (i[0])-(j[0]);
+	for(int q=1;q<i.size();q++)
+	{
+		if(((i[q])-(j[q]))!=k) return 0;
+	}
+	return 1;
+}
+
 vector<unsigned long long int> RLEtocelllist(string RLE)
 {
 	vector<unsigned long long int> tmp;
@@ -199,131 +211,151 @@ long long int inc=0;
 int pattcount=0;
 __int128 postotalindex[MAXGEN+1][2];
 
-int symmetry(mainarr a)
+int initsymmetry(mainarr a)
 {
-	if (initsymm==7)
-	{
-		return 7;
-	}
 	mainarr ar,afx,afy,afxy,afxr,afyr;
 	bool arc,afxc,afyc,afxyc,afxrc,afyrc;
+	for(unsigned long long int i : a.clist)
+	{
+		ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
+		afx.clist.push_back(hsh(-rv(i,0),rv(i,1)));
+		afy.clist.push_back(hsh(rv(i,0),-rv(i,1)));
+		afxy.clist.push_back(hsh(-rv(i,0),-rv(i,1)));
+		afxr.clist.push_back(hsh(rv(i,1),rv(i,0)));
+		afyr.clist.push_back(hsh(-rv(i,1),-rv(i,0)));
+	}
+	sort(ar.clist.begin(),ar.clist.end());
+	sort(afx.clist.begin(),afx.clist.end());
+	sort(afy.clist.begin(),afy.clist.end());
+	sort(afxy.clist.begin(),afxy.clist.end());
+	sort(afxr.clist.begin(),afxr.clist.end());
+	sort(afyr.clist.begin(),afyr.clist.end());
+	arc=compareclist(a,ar),afxc=compareclist(a,afx),afyc=compareclist(a,afy),afxyc=compareclist(a,afxy),afxrc=compareclist(a,afxr),afyrc=compareclist(a,afyr);
+	if(!(arc|afxc|afyc|afxyc|afxrc|afyrc)) return 0; //C1
+	if(!arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 1; //C2
+	if(!arc&(afxc!=afyc)&!afxyc&!afxrc&!afyrc) return 2; //D2+
+	if(!arc&!afxc&!afyc&!afxyc&(afxrc!=afyrc)) return 3; //D2x
+	if(arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 4; //C4
+	if(!arc&afxc&afyc&afxyc&!afxrc&!afyrc) return 5; //D4+
+	if(!arc&!afxc&!afyc&afxyc&afxrc&afyrc) return 6; //D4x
+	return 7; //D8
+}
+
+bool symmetrycheck(vector<unsigned long long> a)
+{
 	switch(initsymm){
+		case 7:
+		{
+			return 1;
+		}
 		case 6:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> ar;
+			bool arc;
+			for(unsigned long long int i : a)
 			{
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
+				ar.push_back(hsh(-rv(i,1),rv(i,0)));
 			}
-			sort(ar.clist.begin(),ar.clist.end());
+			sort(ar.begin(),ar.end());
 			arc=compareclist(a,ar);
-			if(!arc) return 6;
-			return 7;
+			if(!arc) return 1;
+			return 0;
 		}	
 		case 5:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> ar;
+			bool arc;
+			for(unsigned long long int i : a)
 			{
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
+				ar.push_back(hsh(-rv(i,1),rv(i,0)));
 			}
-			sort(ar.clist.begin(),ar.clist.end());
+			sort(ar.begin(),ar.end());
 			arc=compareclist(a,ar);
-			if(!arc) return 5;
-			return 7;
+			if(!arc) return 1;
+			return 0;
 		}
 		
 		case 4:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> afx;
+			bool afxc;
+			for(unsigned long long int i : a)
 			{
-				afx.clist.push_back(hsh(-rv(i,0),rv(i,1)));
+				afx.push_back(hsh(-rv(i,0),rv(i,1)));
 			}
-			sort(afx.clist.begin(),afx.clist.end());
+			sort(afx.begin(),afx.end());
 			afxc=compareclist(a,afx);
-			if(!afxc) return 4;
-			return 7;
+			if(!afxc) return 1;
+			return 0;
 		}
 		
 		case 3:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> afxy;
+			bool afxyc;
+			for(unsigned long long int i : a)
 			{
-				afxy.clist.push_back(hsh(-rv(i,0),-rv(i,1)));
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
+				afxy.push_back(hsh(-rv(i,0),-rv(i,1)));
 			}
-			sort(afxy.clist.begin(),afxy.clist.end());
-			sort(ar.clist.begin(),ar.clist.end());
+			sort(afxy.begin(),afxy.end());
 			afxyc=compareclist(a,afxy);
-			arc=compareclist(a,ar);
-			if(!afxyc) return 3;
-			if(!arc) return 6;
-			return 7;
+			if(!afxyc) return 1;
+			return 0;
 		}
 		
 		case 2:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> afxy;
+			bool afxyc;
+			for(unsigned long long int i : a)
 			{
-				afxy.clist.push_back(hsh(-rv(i,0),-rv(i,1)));
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
+				afxy.push_back(hsh(-rv(i,0),-rv(i,1)));
 			}
-			sort(afxy.clist.begin(),afxy.clist.end());
-			sort(ar.clist.begin(),ar.clist.end());
+			sort(afxy.begin(),afxy.end());
 			afxyc=compareclist(a,afxy);
-			arc=compareclist(a,ar);
-			if(!afxyc) return 2;
-			if(!arc) return 5;
-			return 7;
+			if(!afxyc) return 1;
+			return 0;
 		}
 		
 		case 1:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> afx,ar,afxr;
+			bool afxc,arc,afxrc;
+			for(unsigned long long int i : a)
 			{
-				afx.clist.push_back(hsh(-rv(i,0),rv(i,1)));
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
-				afxr.clist.push_back(hsh(rv(i,1),rv(i,0)));
+				afx.push_back(hsh(-rv(i,0),rv(i,1)));
+				ar.push_back(hsh(-rv(i,1),rv(i,0)));
+				afxr.push_back(hsh(rv(i,1),rv(i,0)));
 			}
-			sort(afx.clist.begin(),afx.clist.end());
-			sort(ar.clist.begin(),ar.clist.end());
-			sort(afxr.clist.begin(),afxr.clist.end());
+			sort(afx.begin(),afx.end());
+			sort(ar.begin(),ar.end());
+			sort(afxr.begin(),afxr.end());
 			afxc=compareclist(a,afx);
 			arc=compareclist(a,ar);
 			afxrc=compareclist(a,afxr);
-			if(arc) 
-			{
-				if (!afxc) return 4;
-				return 7;
-			}
-			if(afxc) return 5;
-			if(afxrc) return 6;
-			return 1;
+			if(!arc&!afxc&!afxrc) return 1;
+			return 0;
 		}
 		default:
 		{
-			for(unsigned long long int i : a.clist)
+			vector<unsigned long long> afx,afy,afxy,afxr,afyr;
+			bool afxc,afyc,afxyc,afxrc,afyrc;
+			for(unsigned long long int i : a)
 			{
-				ar.clist.push_back(hsh(-rv(i,1),rv(i,0)));
-				afx.clist.push_back(hsh(-rv(i,0),rv(i,1)));
-				afy.clist.push_back(hsh(rv(i,0),-rv(i,1)));
-				afxy.clist.push_back(hsh(-rv(i,0),-rv(i,1)));
-				afxr.clist.push_back(hsh(rv(i,1),rv(i,0)));
-				afyr.clist.push_back(hsh(-rv(i,1),-rv(i,0)));
+				afx.push_back(hsh(-rv(i,0),rv(i,1)));
+				afy.push_back(hsh(rv(i,0),-rv(i,1)));
+				afxy.push_back(hsh(-rv(i,0),-rv(i,1)));
+				afxr.push_back(hsh(rv(i,1),rv(i,0)));
+				afyr.push_back(hsh(-rv(i,1),-rv(i,0)));
 			}
-			sort(ar.clist.begin(),ar.clist.end());
-			sort(afx.clist.begin(),afx.clist.end());
-			sort(afy.clist.begin(),afy.clist.end());
-			sort(afxy.clist.begin(),afxy.clist.end());
-			sort(afxr.clist.begin(),afxr.clist.end());
-			sort(afyr.clist.begin(),afyr.clist.end());
-			arc=compareclist(a,ar),afxc=compareclist(a,afx),afyc=compareclist(a,afy),afxyc=compareclist(a,afxy),afxrc=compareclist(a,afxr),afyrc=compareclist(a,afyr);
-			if(!(arc|afxc|afyc|afxyc|afxrc|afyrc)) return 0; //C1
-			if(!arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 1; //C2
-			if(!arc&(afxc!=afyc)&!afxyc&!afxrc&!afyrc) return 2; //D2+
-			if(!arc&!afxc&!afyc&!afxyc&(afxrc!=afyrc)) return 3; //D2x
-			if(arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 4; //C4
-			if(!arc&afxc&afyc&afxyc&!afxrc&!afyrc) return 5; //D4+
-			if(!arc&!afxc&!afyc&afxyc&afxrc&afyrc) return 6; //D4x
-			return 7; //D8
+			sort(afx.begin(),afx.end());
+			sort(afy.begin(),afy.end());
+			sort(afxy.begin(),afxy.end());
+			sort(afxr.begin(),afxr.end());
+			sort(afyr.begin(),afyr.end());
+			afxc=compareclist(a,afx),afyc=compareclist(a,afy),afxyc=compareclist(a,afxy),afxrc=compareclist(a,afxr),afyrc=compareclist(a,afyr);
+			if(!(afxc|afyc|afxyc|afxrc|afyrc)) return 1;
+			return 0;
 		}
 	}
 }
@@ -353,7 +385,7 @@ bool checktrans(mainarr next,int n)
 	if(w>MAXX-1) return 0;
 	if(h>MAXY-1) return 0;
 	if(next.clist.size()>MAXPOP || next.clist.size()<MINPOP) return 0;
-	if(symmetry(next)!=initsymm) return 0;
+	if(!symmetrycheck(next.clist)) return 0;
 	for(int i=0;i<n+1;i++)
 	{
 		if(arr[i].clist.size()>0)
@@ -479,7 +511,7 @@ int main(int argc, char **argv)
 	outfile.close();
 	arr[0].clist = RLEtocelllist(RLE);
 	arr[0].updategbcl();
-	initsymm=symmetry(arr[0]);
+	initsymm=initsymmetry(arr[0]);
 	cout << "initsymm: " << initsymm << endl;
 	outfile.open(file,ios_base::app);
 	outfile << RLE << endl << endl;
