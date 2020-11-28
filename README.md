@@ -1,19 +1,20 @@
 # EnumPattEvo
 Enumerates (given time) all stable patterns with set parameters whose evolutions contain a given starting pattern in Isotropic Non-totalistic Cellular Automata
 
-# Using (will be expanded):
-Compile and use EnumPattEvo2.cpp if the patterns you are working with fit 
-in an area somewhere less than 300 or so all the time. For large ones, use EnumPattEvo.cpp
-Compile with g++ EnumPattEvo.cpp -o (Your preferred file name here) -O3
-In the below examples, I will use EnumPattEvo as the executable name.
+# Purpose and what program to choose
+This program is for exploring the Isotropic Non-Totalistic (INT) rulespace in Cellular Automata, by finding rules where a given pattern follows behavior set by the user. When choosing whether of the two programs to compile, EnumPattEvo.cpp or EnumPattEvo2.cpp, the latter should be chosen if the maximum bounding box is relatively small (area < 300 or so), or the density of the pattern in the bounding box is relatively high. If neither of these are the case, the former should be chosen.
 
-To run, do ./EnumPattEvo 'RLE' 'End Pattern' The end pattern is optional, do not specify any if you just want to find oscs or ships with the first pattern. Both must be formatted in RLE format, but the numbers are removed and replaced with the amount indicated. For example, '2o3$bo2bo!' becomes 'oo$$$bobbo!'.
+# Constants
+There are 6 constants at the top of the program in the .cpp files, MAXPOP, MINPOP, MAXX, MAXY, MAXGEN, and MINGEN.
+MAXPOP is the maximum population you want the pattern to be able to attain.
+MINPOP is the minimum population you want the pattern to be able to attain.
+MAXX is the maximum bounding box size the pattern can reach horizontally.
+MAXY is the maximum bounding box size the pattern can reach vertically.
+MAXGEN is the maximum generation depth to search. For oscillators and spaceships, this is the maximum period.
+MINGEN is the minimum reported generation depth a pattern can have.
 
-The maximum size the pattern can attain, the maximum population it can get to, and the maximum generation depth to search to are specified at the top of the source file.
-The source must be recompiled for any change to these parameters. A good test run is to set MAXPOP to 100, MINPOP to 1, MAXX and MAXY at 5, and MAXGEN to 1000, recompile, then run: 
+# Compilation
+To compile, do g++ (Chosen .cpp file) -o (Preferred Executable Name) -O3
 
-./EnumPattEvo 'obo!'.
-
-It should report 527 patterns found in somewhere around 0.5-0.6 seconds if your computer is good.
-
-(MORE COMING SOON)
+# Usage
+To use, with executable name as EnumPattEvo, in the terminal, do ./EnumPattEvo (RLE) \[RLE of Final Pattern]. The first argument is the pattern fed into the program to find rules for. The second argument is an end pattern different from the first argument that the program should find an evolution to instead. The second argument is optional, and should not be used if the user desires only spaceships and oscillators with the given pattern in the first argument. Both argument one and two should be in RLE format, but replace characters with numbers preceding them with the extended forms. Thus, '2o3$bo2bo!' becomes 'oo$$$bobbo!'.
