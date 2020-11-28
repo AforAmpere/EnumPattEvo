@@ -6,17 +6,23 @@
 #include <vector>
 #include <algorithm>
 
-#define MAXPOP 100
+#define MAXPOP 10000
 #define MINPOP 1
 #define MAXX 3
-#define MAXY 3
-#define MAXGEN 10
+#define MAXY 30
+#define MAXGEN 10000
+#define MINGEN 1
+
+#define C1 30
+#define C2 0
+
+int checkdis =0;
 
 using namespace std;
 
 ofstream outfile;
 
-int translookup[512] = {0, 1, 2, 6, 1, 3, 6, 13, 2, 6, 4, 12, 5, 14, 17, 22, 51, 52, 53, 57, 52, 54, 57, 64, 53, 57, 55, 63, 56, 65, 68, 73, 2, 5, 4, 17, 6, 14, 12, 22, 7, 18, 10, 28, 18, 23, 28, 36, 53, 56, 55, 68, 57, 65, 63, 73, 58, 69, 61, 79, 69, 74, 79, 87, 1, 3, 5, 14, 8, 9, 16, 24, 6, 13, 17, 22, 16, 24, 30, 35, 52, 54, 56, 65, 59, 60, 67, 75, 57, 64, 68, 73, 67, 75, 81, 86, 5, 15, 11, 21, 16, 25, 26, 40, 18, 29, 27, 37, 31, 41, 39, 45, 56, 66, 62, 72, 67, 76, 77, 91, 69, 80, 78, 88, 82, 92, 90, 96, 2, 5, 7, 18, 5, 15, 18, 29, 4, 17, 10, 28, 11, 21, 27, 37, 53, 56, 58, 69, 56, 66, 69, 80, 55, 68, 61, 79, 62, 72, 78, 88, 4, 11, 10, 27, 17, 21, 28, 37, 10, 27, 20, 32, 27, 38, 32, 42, 55, 62, 61, 78, 68, 72, 79, 88, 61, 78, 71, 83, 78, 89, 83, 93, 6, 14, 18, 23, 16, 25, 31, 41, 12, 22, 28, 36, 26, 40, 39, 45, 57, 65, 69, 74, 67, 76, 82, 92, 63, 73, 79, 87, 77, 91, 90, 96, 17, 21, 27, 38, 30, 34, 39, 44, 28, 37, 32, 42, 39, 44, 47, 48, 68, 72, 78, 89, 81, 85, 90, 95, 79, 88, 83, 93, 90, 95, 98, 99, 1, 8, 5, 16, 3, 9, 14, 24, 5, 16, 11, 26, 15, 25, 21, 40, 52, 59, 56, 67, 54, 60, 65, 75, 56, 67, 62, 77, 66, 76, 72, 91, 6, 16, 17, 30, 13, 24, 22, 35, 18, 31, 27, 39, 29, 41, 37, 45, 57, 67, 68, 81, 64, 75, 73, 86, 69, 82, 78, 90, 80, 92, 88, 96, 3, 9, 15, 25, 9, 19, 25, 33, 14, 24, 21, 40, 25, 33, 34, 43, 54, 60, 66, 76, 60, 70, 76, 84, 65, 75, 72, 91, 76, 84, 85, 94, 14, 25, 21, 34, 24, 33, 40, 43, 23, 41, 38, 44, 41, 46, 44, 49, 65, 76, 72, 85, 75, 84, 91, 94, 74, 92, 89, 95, 92, 97, 95, 100, 6, 16, 18, 31, 14, 25, 23, 41, 17, 30, 27, 39, 21, 34, 38, 44, 57, 67, 69, 82, 65, 76, 74, 92, 68, 81, 78, 90, 72, 85, 89, 95, 12, 26, 28, 39, 22, 40, 36, 45, 28, 39, 32, 47, 37, 44, 42, 48, 63, 77, 79, 90, 73, 91, 87, 96, 79, 90, 83, 98, 88, 95, 93, 99, 13, 24, 29, 41, 24, 33, 41, 46, 22, 35, 37, 45, 40, 43, 44, 49, 64, 75, 80, 92, 75, 84, 92, 97, 73, 86, 88, 96, 91, 94, 95, 100, 22, 40, 37, 44, 35, 43, 45, 49, 36, 45, 42, 48, 45, 49, 48, 50, 73, 91, 88, 95, 86, 94, 96, 100, 87, 96, 93, 99, 96, 100, 99, 101};
+const int translookup[512] = {0, 1, 2, 6, 1, 3, 6, 13, 2, 6, 4, 12, 5, 14, 17, 22, 51, 52, 53, 57, 52, 54, 57, 64, 53, 57, 55, 63, 56, 65, 68, 73, 2, 5, 4, 17, 6, 14, 12, 22, 7, 18, 10, 28, 18, 23, 28, 36, 53, 56, 55, 68, 57, 65, 63, 73, 58, 69, 61, 79, 69, 74, 79, 87, 1, 3, 5, 14, 8, 9, 16, 24, 6, 13, 17, 22, 16, 24, 30, 35, 52, 54, 56, 65, 59, 60, 67, 75, 57, 64, 68, 73, 67, 75, 81, 86, 5, 15, 11, 21, 16, 25, 26, 40, 18, 29, 27, 37, 31, 41, 39, 45, 56, 66, 62, 72, 67, 76, 77, 91, 69, 80, 78, 88, 82, 92, 90, 96, 2, 5, 7, 18, 5, 15, 18, 29, 4, 17, 10, 28, 11, 21, 27, 37, 53, 56, 58, 69, 56, 66, 69, 80, 55, 68, 61, 79, 62, 72, 78, 88, 4, 11, 10, 27, 17, 21, 28, 37, 10, 27, 20, 32, 27, 38, 32, 42, 55, 62, 61, 78, 68, 72, 79, 88, 61, 78, 71, 83, 78, 89, 83, 93, 6, 14, 18, 23, 16, 25, 31, 41, 12, 22, 28, 36, 26, 40, 39, 45, 57, 65, 69, 74, 67, 76, 82, 92, 63, 73, 79, 87, 77, 91, 90, 96, 17, 21, 27, 38, 30, 34, 39, 44, 28, 37, 32, 42, 39, 44, 47, 48, 68, 72, 78, 89, 81, 85, 90, 95, 79, 88, 83, 93, 90, 95, 98, 99, 1, 8, 5, 16, 3, 9, 14, 24, 5, 16, 11, 26, 15, 25, 21, 40, 52, 59, 56, 67, 54, 60, 65, 75, 56, 67, 62, 77, 66, 76, 72, 91, 6, 16, 17, 30, 13, 24, 22, 35, 18, 31, 27, 39, 29, 41, 37, 45, 57, 67, 68, 81, 64, 75, 73, 86, 69, 82, 78, 90, 80, 92, 88, 96, 3, 9, 15, 25, 9, 19, 25, 33, 14, 24, 21, 40, 25, 33, 34, 43, 54, 60, 66, 76, 60, 70, 76, 84, 65, 75, 72, 91, 76, 84, 85, 94, 14, 25, 21, 34, 24, 33, 40, 43, 23, 41, 38, 44, 41, 46, 44, 49, 65, 76, 72, 85, 75, 84, 91, 94, 74, 92, 89, 95, 92, 97, 95, 100, 6, 16, 18, 31, 14, 25, 23, 41, 17, 30, 27, 39, 21, 34, 38, 44, 57, 67, 69, 82, 65, 76, 74, 92, 68, 81, 78, 90, 72, 85, 89, 95, 12, 26, 28, 39, 22, 40, 36, 45, 28, 39, 32, 47, 37, 44, 42, 48, 63, 77, 79, 90, 73, 91, 87, 96, 79, 90, 83, 98, 88, 95, 93, 99, 13, 24, 29, 41, 24, 33, 41, 46, 22, 35, 37, 45, 40, 43, 44, 49, 64, 75, 80, 92, 75, 84, 92, 97, 73, 86, 88, 96, 91, 94, 95, 100, 22, 40, 37, 44, 35, 43, 45, 49, 36, 45, 42, 48, 45, 49, 48, 50, 73, 91, 88, 95, 86, 94, 96, 100, 87, 96, 93, 99, 96, 100, 99, 101};
 const char *intlookup[51]={"0","1c","1e","2c","2e","2k","2a","2i","2n","3c","3e","3k","3a","3i","3n","3y","3q","3j","3r","4c","4e","4k","4a","4i","4n","4y","4q","4j","4r","4t","4w","4z","5c","5e","5k","5a","5i","5n","5y","5q","5j","5r","6c","6e","6k","6a","6i","6n","7c","7e","8"};
 
 unsigned long long int hsh (int x, int y)
@@ -32,8 +38,26 @@ int rv(unsigned long long int hsh,bool w)
 
 struct mainarr
 {
-	int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
-	//int translist[102]= {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
+	//int translist[102]= {0,0,0,0,0,0,0,2,0,0,1,2,1,1,0,0,0,1,1,2,0,0,0,0,0,0,0,1,0,0,0,2,1,0,2,0,0,0,0,0,0,2,2,0,0,0,2,2,2,0,2,0,0,0,1,1,1,1,0,1,1,1,0,0,1,1,2,1,1,1,2,2,0,0,1,2,2,2,0,1,2,0,2,1,2,2,2,0,0,0,0,1,2,1,2,0,2,2,0,2,2,2,};
+	int translist[102]= {
+	0,
+	0,2,
+	2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,
+	2,2,
+	2,
+	2,
+	2,2,
+	2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,
+	2,2,
+	2};
 	vector<unsigned long long int> clist,gbcl;
 	vector<int> trgbcl;
 	
@@ -55,9 +79,10 @@ struct mainarr
 	{
 		vector<int> arrout;
 		int y=0;
-		for(auto i : gbcl)
+		int q;
+		while(y<gbcl.size())
 		{
-			int q=trgbcl[y];
+			q=trgbcl[y];
 			if (translist[q]==2)
 			{
 				arrout.push_back(q);
@@ -65,7 +90,7 @@ struct mainarr
 			y++;
 		}
 		sort(arrout.begin(),arrout.end());
-		arrout.erase( unique( arrout.begin(), arrout.end() ), arrout.end() );
+		arrout.erase(unique(arrout.begin(),arrout.end()),arrout.end());
 		return arrout;
 	}
 	
@@ -81,7 +106,6 @@ struct mainarr
 			}
 			y++;
 		}
-		sort(tmp.begin(),tmp.end());
 		return tmp;
 	}
 	
@@ -104,7 +128,6 @@ struct mainarr
 		gbcl.assign(tmp.begin(),tmp.end());
 		for (int k=0;k<gbcl.size();k++)
 		{
-			//tmp2.push_back(trans(rv(gbcl[k],0),rv(gbcl[k],1)));
 			tmp2.push_back(trans(gbcl[k]));
 		}
 		trgbcl=tmp2;
@@ -112,9 +135,10 @@ struct mainarr
 };
 
 mainarr arr[MAXGEN];
+vector<unsigned long long> endpatt;
 int initsymm=8;
 
-bool compareclist(mainarr i,mainarr j)
+bool compareclist(mainarr& i,mainarr& j)
 {
 	if(i.clist==j.clist) return 1;
 	if (i.clist.size() != j.clist.size()) return 0;
@@ -126,7 +150,7 @@ bool compareclist(mainarr i,mainarr j)
 	return 1;
 }
 
-bool compareclist(vector<unsigned long long> i,vector<unsigned long long> j)
+bool compareclist(vector<unsigned long long>& i,vector<unsigned long long>& j)
 {
 	if(i==j) return 1;
 	if (i.size() != j.size()) return 0;
@@ -182,7 +206,7 @@ void printint128(__int128 n)
 	cout << s;
 }
 
-mainarr combo(mainarr curr, vector<int> tlist, __int128 index)
+mainarr combo(mainarr& curr, vector<int>& tlist, __int128 index)
 {
 	const int y = tlist.size();
 	int binlist[y];
@@ -241,7 +265,7 @@ int initsymmetry(mainarr a)
 	return 7; //D8
 }
 
-bool symmetrycheck(vector<unsigned long long> a)
+bool symmetrycheck(vector<unsigned long long>& a)
 {
 	switch(initsymm){
 		case 7:
@@ -360,7 +384,7 @@ bool symmetrycheck(vector<unsigned long long> a)
 	}
 }
 
-bool checktrans(mainarr next,int n)
+bool checktrans(mainarr& next,int n)
 {
 	if (next.clist.empty())
 	{
@@ -385,15 +409,42 @@ bool checktrans(mainarr next,int n)
 	if(w>MAXX-1) return 0;
 	if(h>MAXY-1) return 0;
 	if(next.clist.size()>MAXPOP || next.clist.size()<MINPOP) return 0;
-	if(!symmetrycheck(next.clist)) return 0;
+	if (endpatt.size()>0 && compareclist(next.clist,endpatt))
+	{
+		if (n+1 >= MINGEN)
+		{
+			if(checkdis && !(rv(nxf,0)>C1 )) return 0;//&& rv(nxf,1)==C2)) return 0;
+			outfile << "B";
+			for (int i=0;i<51;i++)
+			{
+				if (next.translist[i]==1) 
+				{
+					outfile << intlookup[i];
+				}
+			}
+			outfile << "/S";
+			for (int i=51;i<102;i++)
+			{
+				if (next.translist[i]==1)
+				{
+					outfile << intlookup[i%51];
+				}
+			}
+			outfile << ": " << n+1 <<endl;
+			pattcount++;
+		}
+		return 0;
+	}
+	if(endpatt.size()==0 && !symmetrycheck(next.clist)) return 0;
 	for(int i=0;i<n+1;i++)
 	{
 		if(arr[i].clist.size()>0)
 		{
 			if (compareclist(next,arr[i]))
 			{
-				if(i==0)
+				if(i==0 && endpatt.size()==0 && n+1 >= MINGEN)
 				{
+					if(checkdis && !(rv(nxf,0)==C1 && rv(nxf,1)==C2)) return 0;
 					outfile << "B";
 					for (int i=0;i<51;i++)
 					{
@@ -410,15 +461,18 @@ bool checktrans(mainarr next,int n)
 							outfile << intlookup[i%51];
 						}
 					}
-					outfile << ": (" << rv(nxf,0)-rv(arr[0].clist[0],0) << "," << rv(nxf,1)-rv(arr[0].clist[0],1) << ")/" << n-i+1 << endl;
+					outfile << ": (" << rv(nxf,0)-rv(arr[0].clist[0],0) << "," << rv(nxf,1)-rv(arr[0].clist[0],1) << ")/" << n+1 << endl;
 					pattcount++;
 				}
 				return 0;
 			}
+
 		}
 	}
 	return 1;
 }
+
+mainarr q;
 
 void branch(int n)
 {
@@ -428,7 +482,7 @@ void branch(int n)
 	{
 		inc++;
 		postotalindex[n][0]=i;postotalindex[n][1]=b;
-		if(inc%500000==0)
+		if(inc%1000000==0)
 		{
 			cout << "Depth: " << n+1 << ", progress: ";
 			for(int q=0; q<n+1;q++)
@@ -443,7 +497,7 @@ void branch(int n)
 			cout << endl << "Patterns: " << pattcount;
 			cout << endl << endl;
 		}
-		mainarr q = combo(arr[n],trstr,i);
+		q = combo(arr[n],trstr,i);
 		bool o = checktrans(q,n);
 		if(o && n+1<MAXGEN)
 		{
@@ -505,13 +559,20 @@ int main(int argc, char **argv)
 	}
 	if (argc > 2)
 	{
-		file = argv[2];
+		endpatt = RLEtocelllist(argv[2]);
+		//file = argv[2];
 	}
 	outfile.open(file);
 	outfile.close();
 	arr[0].clist = RLEtocelllist(RLE);
 	arr[0].updategbcl();
 	initsymm=initsymmetry(arr[0]);
+	// if (argc > 2)
+	// {
+		// mainarr endpatta;
+		// endpatta.clist = endpatt;
+		// initsymm = initsymmetry(endpatta);
+	// }
 	cout << "initsymm: " << initsymm << endl;
 	outfile.open(file,ios_base::app);
 	outfile << RLE << endl << endl;
