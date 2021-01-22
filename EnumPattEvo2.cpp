@@ -581,7 +581,7 @@ int main(int argc, char **argv)
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,"o:p:t:r:q:s:",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,"o:p:t:r:q:s:h",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -623,6 +623,22 @@ int main(int argc, char **argv)
 				maxrule=optarg;
 				minmaxflag=1;
 				break;
+			}
+			
+			case 'h':
+			{
+				cout
+				<< "\n-p is for setting the pattern, use a headerless RLE for this in quotes, i.e. -p '3o$bo$5bo'.\n\n"
+				<< "-f or --file is for setting the output file of the results.\n\n"
+				<< "-t or --target is for setting an optional target pattern that is not the original set pattern,\nin the same format as -p.\n\n"
+				<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
+				<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
+				<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
+				<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
+				<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
+				<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
+				exit(0);
+
 			}
 		}
 	}
