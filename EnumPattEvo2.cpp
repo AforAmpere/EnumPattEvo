@@ -275,7 +275,7 @@ int initsymmetry(mainarr a)
 	{
 		for(int i=1;i<a.nx+1;i++)
 		{
-			cout << a.clist[i][j] << "," ;
+			cout << a.clist[i][j] << " " ;
 			if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
@@ -577,11 +577,14 @@ int main(int argc, char **argv)
 		{"min", 1,0,'q'},
 		{"max", 1,0,'s'},
 		{"target", 1,0,'t'},
+		{"help", 1,0,'h'},
+		{"patt", 1,0,'p'},
+		{"pattern", 1,0,'p'},
 	};
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,"o:p:t:r:q:s:h",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -627,18 +630,71 @@ int main(int argc, char **argv)
 			
 			case 'h':
 			{
-				cout
-				<< "\n-p is for setting the pattern, use a headerless RLE for this in quotes, i.e. -p '3o$bo$5bo'.\n\n"
-				<< "-f or --file is for setting the output file of the results.\n\n"
-				<< "-t or --target is for setting an optional target pattern that is not the original set pattern,\nin the same format as -p.\n\n"
-				<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
-				<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
-				<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
-				<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
-				<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
-				<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
-				exit(0);
+				string ts=optarg;
+				if(ts=="h" || ts=="help")
+				{
+					cout << "You've clearly figured it out." << endl;
+					exit(0);
+				}
+				
+				if(ts=="p" || ts=="patt" || ts=="pattern")
+				{
+					cout << "Enter the headerless RLE for the desired starting pattern in in quotes after the flag, i.e. -p '3o$bbo$bo!'." << endl;
+					exit(0);
+				}
+				
+				if(ts=="f" || ts=="file")
+				{
+					cout << "Enter the name of an output file for results from EPE, i.e -f Output.txt." << endl;
+					exit(0);
+				}
+				
+				if(ts=="t" || ts=="target")
+				{
+					cout << "Enter a secondary RLE for a target pattern to have the one in -p evolve to instead, in the same format as -p. So, to look for evolutions"
+					<<" from 3o! to bo$3o$bo!, do -p '3o!' -t 'bo$3o$bo!'."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="r" || ts=="prule")
+				{
+					cout << "Input a partial rule denoting the rulerange in Macbi partial rule format in which you want to search. This is the same format used in LLS."
+					<< " Do not use in conjunction with -q (--min) or -s (--max)."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="q" || ts=="min")
+				{
+					cout << "Input the minimum rule in the desired rulerange to search in. Do not use in conjunction with -r (--prule)"<< endl;
+					exit(0);
+				}
+				
+				if(ts=="s" || ts=="max")
+				{
+					cout << "Input the maximum rule in the desired rulerange to search in. Do not use in conjunction with -r (--prule)"<< endl;
+					exit(0);
+				}
 
+
+			}
+			
+			case ':':
+			{
+				if (optopt=='h')
+				{
+					cout
+					<<"\n-h or --help pulls up this message. Putting a hyphenless argument after -h will give more info on it.\n\n"
+					<< "-p is for setting the pattern, use a headerless RLE for this in quotes, i.e. -p '3o$bo$5bo'.\n\n"
+					<< "-f or --file is for setting the output file of the results.\n\n"
+					<< "-t or --target is for setting an optional target pattern that is not the original set pattern,\nin the same format as -p.\n\n"
+					<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
+					<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
+					<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
+					<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
+					<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
+					<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
+					exit(0);
+				}
 			}
 		}
 	}
@@ -775,6 +831,19 @@ int main(int argc, char **argv)
 	arr[0].p = arr[0].clist[2][0];
 	arr[0].clist[0][0]=0,arr[0].clist[0][1]=0,arr[0].clist[2][0]=0;
 	initsymm=initsymmetry(arr[0]);
+	if (endpatt.nx!=0)
+	{
+		cout << "|\nv\n\n";
+		for (int j=1;j<endpatt.ny+1;j++)
+		{
+			for(int i=1;i<endpatt.nx+1;i++)
+			{
+				cout << endpatt.clist[i][j] << " " ;
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
 	//cout << arr[0].nx << " " << arr[0].ny << " " << arr[0].p << " " << endl;
 	cout << "initsymm: " << initsymm << endl << endl;
 	outfile.open(file,ios_base::app);
