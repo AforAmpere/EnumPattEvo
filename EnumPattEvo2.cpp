@@ -1082,7 +1082,7 @@ int main(int argc, char **argv)
 					<< "-z or --no_exp is for turning off explosion detection.\n\n"
 					<< "-e or --evo is for turning on additional reporting of results that result from the evolution of the starting pattern, but do not include it.\n\n"
 					<< "-c or --comm is for setting the minimum commonness of a pattern, -c 'n' forces the pattern to work in at least 2^n rules in the given space.\n\n"
-					<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
+					<< "There are 5 other constants to change at the top of the file, which set population bounds, "
 					<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
 					<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
 					exit(0);
