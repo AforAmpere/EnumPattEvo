@@ -8,11 +8,10 @@
 #include <array>
 #include <getopt.h>
 
-#define MAXPOP 400
-#define MINPOP 1
-#define MAXX 3
-#define MAXY 3
-#define MAXGEN 400
+#define POP (next.p<1000)
+#define MAXX 11
+#define MAXY 11
+#define MAXGEN 8000
 #define MINGEN 1
 
 using namespace std;
@@ -118,6 +117,22 @@ struct mainarr
 mainarr arr[MAXGEN];
 mainarr q;
 int initsymm=8;
+int xdis=100000;
+int ydis=100000;
+bool gxflag=0;
+bool lxflag=0;
+bool gyflag=0;
+bool lyflag=0;
+bool explodeflag=1;
+bool evolveflag=0;
+bool emptyflag=0;
+__int128 totrules=0;
+int b1efrontend=0;
+int b2afrontend=0;
+int b1e2cfrontend=0;
+int b2a2cfrontend=0;
+int b2a3ifrontend=0;
+int commonconst=0;
 
 bool compareclist(mainarr& i,mainarr& j)
 {
@@ -401,16 +416,263 @@ bool symmetrycheck(mainarr& a)
 	}
 }
 
+int checkfrontend(mainarr& next, int initi)
+{
+	int t=1,r=1,b=1,l=1,b1e=0,b2c=0,b2a=0,b3i=0;
+	int dir=0;
+	int q=0;
+	
+	if (initi==0)
+	{
+		b1e=next.translist[2]%2;
+		if(next.translist[3]==0) b2c=0;
+		else b2c=1;
+		b2a=next.translist[6]%2;
+		b3i=next.translist[13]%2;
+	}
+	
+	else
+	{
+		if (initi%2==1) b1e=1;
+		if (initi%4>>1==1) b2c=1;
+		if (initi%8>>2==1) b2a=1;
+		if (initi>>3==1) b3i=1;
+	}
+	
+	if (b1e&&!b2c) dir=b1efrontend;
+	if (b1e&&b2c) dir=b1e2cfrontend;
+	if (b2a&&!b2c) dir=b2afrontend;
+	if (b2a&&b2c) dir=b2a2cfrontend;
+	if (b2a&&b3i) dir=b2a3ifrontend;
+	
+	if (dir%2==1) t=0;
+	if (dir%4>>1==1) r=0;
+	if (dir%8>>2==1) b=0;
+	if (dir>>3==1) l=0;
+	
+	//cout << b1e << b2c << b2a << b3i << initi << endl;
+	
+	if(b1e+b2a==0) return 1;
+	if(b1e+b2a==2) 
+	{
+		//cout << "Found" << endl;
+		return 0;
+	}
+	
+	if (t)
+	{
+		int offrun=100000,onrun=0,ch=0;
+		for (int j=1; j<next.nx+1;j++)
+		{
+			if (next.clist[j][1]==0) 
+			{
+				if (next.clist[j-1][1]==1) 
+				{
+					if (onrun==(b1e?1:2) && ch==1) 
+					{
+						ch=2;
+					}
+					else ch=0;
+					onrun=0;
+				}
+				offrun+=1;
+				if (ch==2 && offrun>(b2c)) ch=3;
+			}
+			if (next.clist[j][1]==1)
+			{
+				if (onrun>(b1e?0:1)) ch=0;
+				if (next.clist[j-1][1]==0)
+				{
+					if (offrun>(b2c)) ch=1;
+					else ch=0;
+					offrun=0;
+				}
+				onrun+=1;
+			}
+			if (j==next.nx && (ch==1 && onrun==(b1e?1:2) || ch==2)) ch=3;
+			if (b2a && b3i && onrun>1) ch=3;
+			if (ch==3) j=next.nx+1;
+			//cout << ch << " ";
+		}
+		//cout << endl;
+		if (ch==3)
+		{
+			if (initi==0) return 0;
+			else q++;
+		}
+		//else cout << "Not" << endl;
+	}
+	if (r)
+	{
+		int offrun=10000,onrun=0,ch=0;
+		for (int j=1; j<next.ny+1;j++)
+		{
+			if (next.clist[next.nx][j]==0) 
+			{
+				if (next.clist[next.nx][j-1]==1) 
+				{
+					if (onrun==(b1e?1:2) && ch==1) 
+					{
+						ch=2;
+					}
+					else ch=0;
+					onrun=0;
+				}
+				offrun+=1;
+				if (ch==2 && offrun>(b2c)) ch=3;
+			}
+			if (next.clist[next.nx][j]==1)
+			{
+				if (onrun>(b1e?0:1)) ch=0;
+				if (next.clist[next.nx][j-1]==0)
+				{
+					if (offrun>(b2c)) ch=1;
+					else ch=0;
+					offrun=0;
+				}
+				onrun+=1;
+			}
+			if (j==next.ny && (ch==1 && onrun==(b1e?1:2) || ch==2)) ch=3;
+			if (b2a && b3i && onrun>1) ch=3;
+			if (ch==3) j=next.ny+1;
+			//cout << ch << " ";
+		}
+		if (ch==3)
+		{
+			if (initi==0) return 0;
+			else q+=2;
+		}
+	}
+	if (b)
+	{
+		int offrun=10000,onrun=0,ch=0;
+		for (int j=1; j<next.nx+1;j++)
+		{
+			if (next.clist[j][next.ny]==0) 
+			{
+				if (next.clist[j-1][next.ny]==1) 
+				{
+					if (onrun==(b1e?1:2) && ch==1) 
+					{
+						ch=2;
+					}
+					else ch=0;
+					onrun=0;
+				}
+				offrun+=1;
+				if (ch==2 && offrun>(b2c)) ch=3;
+			}
+			if (next.clist[j][next.ny]==1)
+			{
+				if (onrun>(b1e?0:1)) ch=0;
+				if (next.clist[j-1][next.ny]==0)
+				{
+					if (offrun>(b2c)) ch=1;
+					else ch=0;
+					offrun=0;
+				}
+				onrun+=1;
+			}
+			if (j==next.nx && (ch==1 && onrun==(b1e?1:2) || ch==2)) ch=3;
+			if (b2a && b3i && onrun>1) ch=3;
+			if (ch==3) j=next.nx+1;
+			//cout << ch << " ";
+		}
+		if (ch==3)
+		{
+			if (initi==0) return 0;
+			else q+=4;
+		}
+	}
+	if (l)
+	{
+		int offrun=10000,onrun=0,ch=0;
+		for (int j=1; j<next.ny+1;j++)
+		{
+			if (next.clist[1][j]==0) 
+			{
+				if (next.clist[1][j-1]==1) 
+				{
+					if (onrun==(b1e?1:2) && ch==1) 
+					{
+						ch=2;
+					}
+					else ch=0;
+					onrun=0;
+				}
+				offrun+=1;
+				if (ch==2 && offrun>(b2c)) ch=3;
+			}
+			if (next.clist[1][j]==1)
+			{
+				if (onrun>(b1e?0:1)) ch=0;
+				if (next.clist[1][j-1]==0)
+				{
+					if (offrun>(b2c)) ch=1;
+					else ch=0;
+					offrun=0;
+				}
+				onrun+=1;
+			}
+			if (j==next.ny && (ch==1 && onrun==(b1e?1:2) || ch==2)) ch=3;
+			if (b2a && b3i && onrun>1) ch=3;
+			if (ch==3) j=next.ny+1;
+			//cout << ch << " ";
+		}
+		if (ch==3)
+		{
+			if (initi==0) return 0;
+			else q+=8;
+		}
+	}
+	if (initi==0) return 1;
+	return q;
+}
+
 bool checktrans(mainarr& next,int n)
 {
+	if (next.p==0)
+	{
+		if (emptyflag)
+		{
+			outfile << "B";
+			for (int i=0;i<51;i++)
+			{
+				if (next.translist[i]==1) 
+				{
+					outfile << intlookup[i];
+				}
+			}
+			outfile << "/S";
+			for (int i=51;i<102;i++)
+			{
+				if (next.translist[i]==1)
+				{
+					outfile << intlookup[i%51];
+				}
+			}
+			outfile << ": " << n+1 << endl;
+			pattcount++;
+		}
+		return 0;
+	}
 	int w = next.nx;
-	if (w==MAXX+4) return 0;
 	int h = next.ny;
 	if(w>MAXX) return 0;
 	if(h>MAXY) return 0;
-	if(next.p<MINPOP || next.p > MAXPOP) return 0;
-	if (endpatt.nx!=0 && compareclist(next,endpatt))// && next.tx==0 && next.ty==0)
+	if(!POP) return 0;
+	int poss=0;
+	for (int k=0;k<102;k++)
 	{
+		if (next.translist[k]==2) poss++;
+	}
+	if (poss<commonconst) return 0;
+	if(explodeflag&&!checkfrontend(next,0)) return 0;
+	if(explodeflag&& endpatt.nx==0 && (next.translist[2]==1 && next.translist[6]==1)) return 0;
+	if (endpatt.nx!=0 && compareclist(next,endpatt) && n+1 >= MINGEN)
+	{
+		if(xdis!=100000 && ((!gxflag && !lxflag && next.tx!=xdis) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
+		if(ydis!=100000 && ((!gyflag && !lyflag && next.ty!=ydis) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
 		outfile << "B";
 		for (int i=0;i<51;i++)
 		{
@@ -427,23 +689,25 @@ bool checktrans(mainarr& next,int n)
 				outfile << intlookup[i%51];
 			}
 		}
-		outfile << ": " << n+1 <<endl;
+		outfile << ": " << n+1 << endl;
 		pattcount++;
 		return 0;
 	}
-	if(endpatt.nx==0 && !symmetrycheck(next)) return 0;
+	if((endpatt.nx==0 && !emptyflag) && !symmetrycheck(next)) return 0;
 	for(int i=0;i<n+1;i++)
 	{
 		if(w>=0)
 		{
 			if (compareclist(next,arr[i]))
 			{
-				if(endpatt.nx==0 && i==0 && n+1 >= MINGEN)
+				if(xdis!=100000 && ((!gxflag && !lxflag && next.tx!=xdis) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
+				if(ydis!=100000 && ((!gyflag && !lyflag && next.ty!=ydis) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
+				if((endpatt.nx==0 && !emptyflag) && (i==0 || evolveflag) && n-i+1 >= MINGEN)
 				{
-					int popmin=MAXPOP+1;
-					for (int i=0;i<n+1;i++)
+ 					int popmin=100000;
+					for (int k=i;k<n+1;k++)
 					{
-						if (arr[i].p<popmin) popmin=arr[i].p;
+						if (arr[k].p<popmin) popmin=arr[k].p;
 					}
 					
 					outfile << "B";
@@ -462,19 +726,24 @@ bool checktrans(mainarr& next,int n)
 							outfile << intlookup[i%51];
 						}
 					}
-					outfile << ": (" << next.tx << "," << next.ty << ")/" << n+1 << ", Minpop:" << popmin << endl;
+					outfile << ": (" << next.tx-arr[i].tx << "," << next.ty-arr[i].ty << ")/" << n-i+1 << ", Minpop:" << popmin << ", 2^" << poss << endl;
 					pattcount++;
 				}
 				return 0;
 			}
 
 		}
+		else return 0;
 	}
+	//if(!POP) return 0;
 	return 1;
 }
 
+int nflag=0;
+
 void branch(int n)
 {
+	if (nflag>0 && pattcount>=nflag) return;
 	vector<int> trstr = arr[n].totrans();
 	__int128 b = intpow(trstr.size());
 	for(__int128 i=0;i<b;i++)
@@ -503,6 +772,7 @@ void branch(int n)
 			arr[n+1]=q;
 			branch(n+1);
 		}		
+		if (nflag>0 && pattcount>=nflag) break;
 		postotalindex[n][0]=0;postotalindex[n][1]=0;
 	}	
 }
@@ -580,11 +850,17 @@ int main(int argc, char **argv)
 		{"help", 1,0,'h'},
 		{"patt", 1,0,'p'},
 		{"pattern", 1,0,'p'},
+		{"num", 1,0,'n'},
+		{"evo", 1,0,'e'},
+		{"no_exp", 1,0,'z'},
+		{"comm", 1,0,'c'},
+		{"xtrans", 1,0,'x'},
+		{"ytrans", 1,0,'y'},
 	};
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -604,6 +880,7 @@ int main(int argc, char **argv)
 			{
 				endpatt.clist = RLEtocelllist(optarg);
 				endpatt.nx=endpatt.clist[0][0],endpatt.ny=endpatt.clist[0][1];
+				if(endpatt.nx==0) emptyflag=1;
 				endpatt.clist[0][0]=0,endpatt.clist[0][1]=0,endpatt.clist[2][0]=0;
 				break;
 			}
@@ -625,6 +902,62 @@ int main(int argc, char **argv)
 			{
 				maxrule=optarg;
 				minmaxflag=1;
+				break;
+			}
+			
+			case 'x':
+			{
+				string ts=optarg;
+				if(ts[0]=='>')
+				{
+					gxflag=1;
+					xdis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
+				if(ts[0]=='<')
+				{
+					lxflag=1;
+					xdis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
+				xdis=stoi(ts);
+				break;
+			}
+			
+			case 'y':
+			{
+				string ts=optarg;
+				if(ts[0]=='>')
+				{
+					gyflag=1;
+					ydis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
+				if(ts[0]=='<')
+				{
+					lyflag=1;
+					ydis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
+				ydis=stoi(ts);
+				break;
+			}
+			
+			case 'z':
+			{
+				explodeflag=0;
+				break;
+			}
+			
+			case 'e':
+			{
+				evolveflag=1;
+				break;
+			}
+			
+			case 'c':
+			{
+				commonconst=atoi(optarg);
 				break;
 			}
 			
@@ -674,8 +1007,61 @@ int main(int argc, char **argv)
 					cout << "Input the maximum rule in the desired rulerange to search in. Do not use in conjunction with -r (--prule)"<< endl;
 					exit(0);
 				}
+				
+				if(ts=="x" || ts=="xtrans")
+				{
+					cout << "Input the desired bound on the translation of the top left of the bounding box of the pattern in x (where rightwards is positive). "
+					<< "An optional '>' or '<' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells to the right "
+					<< "-x '>5' would specify that."<< endl;
+					
+					exit(0);
+				}
+				
+				if(ts=="y" || ts=="ytrans")
+				{
+					cout << "Input the desired bound on the translation of the top left of the bounding box of the pattern in y (where downwards is positive). "
+					<< "An optional '>' or '<' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells downward "
+					<< "-y '>5' would specify that."<< endl;
+					
+					exit(0);
+				}
+				
+				if(ts=="n" || ts=="num")
+				{
+					cout << "Input the maximum number of results to find before quitting. -n 3 will find 3 results and exit, for example."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="z" || ts=="no_exp")
+				{
+					cout << "Takes no arguments and turns off explosion detection if used."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="e" || ts=="evo")
+				{
+					cout << "Takes no arguments and turns on reporting of stable ships or oscillators that result from the evolution of the initial pattern, but "
+					<< "do not contain the initial pattern as a phase. Using this with -t is useless."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="c" || ts=="comm")
+				{
+					cout << "Input the desired degree of commonness of the pattern in the specified rulespace. -c 8 will force any results to occur within 2^8 rules "
+					<< "or more in the rulespace provided with -q, -r, and/or -s."<< endl;
+					exit(0);
+				}
+				
+				cout << "Command not found." << endl;
+				exit(0);
 
 
+			}
+			
+			case 'n':
+			{
+				nflag=atoi(optarg);
+				break;
 			}
 			
 			case ':':
@@ -690,6 +1076,12 @@ int main(int argc, char **argv)
 					<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
 					<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
 					<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
+					<< "-x or --xtrans is for setting the bounds on the translation of the bounding box in x.\n\n"
+					<< "-y or --ytrans is for setting the bounds on the translation of the bounding box in y.\n\n"
+					<< "-n or --num is for setting the number of results to quit when reached.\n\n"
+					<< "-z or --no_exp is for turning off explosion detection.\n\n"
+					<< "-e or --evo is for turning on additional reporting of results that result from the evolution of the starting pattern, but do not include it.\n\n"
+					<< "-c or --comm is for setting the minimum commonness of a pattern, -c 'n' forces the pattern to work in at least 2^n rules in the given space.\n\n"
 					<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
 					<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
 					<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
@@ -706,8 +1098,8 @@ int main(int argc, char **argv)
 		int maxl[102]={0};
 		for (char c:minrule)
 		{
-			if (c=='B') {bs=0; prevnum=0;}
-			if (c=='S') {bs=1; prevnum=0;}
+			if (c=='B' || c=='b') {bs=0; prevnum=0;}
+			if (c=='S' || c=='s') {bs=1; prevnum=0;}
 			if (c>46 && c<58) 
 			{
 				if(prevnum)
@@ -753,8 +1145,8 @@ int main(int argc, char **argv)
 		bs=0,k=0;
 		for (char c:maxrule)
 		{
-			if (c=='B') {bs=0; prevnum=0;}
-			if (c=='S') {bs=1; prevnum=0;}
+			if (c=='B' || c=='b') {bs=0; prevnum=0;}
+			if (c=='S' || c=='s') {bs=1; prevnum=0;}
 			if (c>46 && c<58) 
 			{
 				//cout << maxrule.length() << endl;
@@ -805,13 +1197,6 @@ int main(int argc, char **argv)
 		}
 		
 		arr[0].translist[0]=0;
-		
-		// for(int i:arr[0].translist) cout << i;
-		// cout << endl;
-		// for(int i:minl) cout << i;
-		// cout << endl;
-		// for(int i:maxl) cout << i;
-		// cout << endl;
 	}
 	
 	if(!outflag) file = "Output - EnumPattEvo.txt";
@@ -844,11 +1229,26 @@ int main(int argc, char **argv)
 		}
 		cout << endl;
 	}
-	//cout << arr[0].nx << " " << arr[0].ny << " " << arr[0].p << " " << endl;
 	cout << "initsymm: " << initsymm << endl << endl;
 	outfile.open(file,ios_base::app);
 	outfile << RLE << endl << endl;
-	branch(0);
+	//cout << nflag << endl;
+	b1efrontend=checkfrontend(arr[0],1);
+	b1e2cfrontend=checkfrontend(arr[0],3);
+	b2afrontend=checkfrontend(arr[0],4);
+	b2a2cfrontend=checkfrontend(arr[0],6);
+	b2a3ifrontend=checkfrontend(arr[0],12);
+	
+	//cout << b1efrontend << "," << b1e2cfrontend << "," << b2afrontend << "," << b2a2cfrontend << "," << b2a3ifrontend << endl;
+	
+	if(b1efrontend&(b1efrontend-1)) b1efrontend=0;
+	if(b1e2cfrontend&(b1e2cfrontend-1)) b1e2cfrontend=0;
+	if(b2afrontend&(b2afrontend-1)) b2afrontend=0;
+	if(b2a2cfrontend&(b2a2cfrontend-1)) b2a2cfrontend=0;
+	if(b2a3ifrontend&(b2a3ifrontend-1)) b2a3ifrontend=0;
+	
+	if ((arr[0].translist[2]!=1 || arr[0].translist[6]!=1) || endpatt.nx!=0 ) branch(0);
 	outfile.close();
+	cout << endl << endl;
 	cout << "time: " << chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - t1).count() << " seconds, patterns: " << pattcount << ", inc: " << inc << endl;
 }
