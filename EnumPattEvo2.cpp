@@ -9,8 +9,8 @@
 #include <getopt.h>
 
 #define POP (next.p<1000)
-#define MAXX 11
-#define MAXY 11
+#define MAXX 5
+#define MAXY 5
 #define MAXGEN 8000
 #define MINGEN 1
 
@@ -123,6 +123,9 @@ bool gxflag=0;
 bool lxflag=0;
 bool gyflag=0;
 bool lyflag=0;
+bool axflag=0;
+bool ayflag=0;
+bool moveflag=0;
 bool explodeflag=1;
 bool evolveflag=0;
 bool emptyflag=0;
@@ -630,7 +633,7 @@ int checkfrontend(mainarr& next, int initi)
 }
 
 bool checktrans(mainarr& next,int n)
-{
+{	
 	if (next.p==0)
 	{
 		if (emptyflag)
@@ -658,8 +661,31 @@ bool checktrans(mainarr& next,int n)
 	}
 	int w = next.nx;
 	int h = next.ny;
+	// if(n>30)
+	// {
+			// outfile << "B";
+			// for (int i=0;i<51;i++)
+			// {
+				// if (next.translist[i]==1) 
+				// {
+					// outfile << intlookup[i];
+				// }
+			// }
+			// outfile << "/S";
+			// for (int i=51;i<102;i++)
+			// {
+				// if (next.translist[i]==1)
+				// {
+					// outfile << intlookup[i%51];
+				// }
+			// }
+			// outfile << ": " << n+1 << endl;
+			// pattcount++;
+			// return 0;
+	// }
 	if(w>MAXX) return 0;
 	if(h>MAXY) return 0;
+	//if(w>=3 && h>=3) return 0;
 	if(!POP) return 0;
 	int poss=0;
 	for (int k=0;k<102;k++)
@@ -671,8 +697,9 @@ bool checktrans(mainarr& next,int n)
 	if(explodeflag&& endpatt.nx==0 && (next.translist[2]==1 && next.translist[6]==1)) return 0;
 	if (endpatt.nx!=0 && compareclist(next,endpatt) && n+1 >= MINGEN)
 	{
-		if(xdis!=100000 && ((!gxflag && !lxflag && next.tx!=xdis) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
-		if(ydis!=100000 && ((!gyflag && !lyflag && next.ty!=ydis) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
+		if(xdis!=100000 && ((!gxflag && !lxflag && ((axflag)==(next.tx==xdis))) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
+		if(ydis!=100000 && ((!gyflag && !lyflag && ((ayflag)==(next.ty==ydis))) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
+		if(moveflag && (next.tx==0 && next.ty==0)) return 0;
 		outfile << "B";
 		for (int i=0;i<51;i++)
 		{
@@ -700,8 +727,9 @@ bool checktrans(mainarr& next,int n)
 		{
 			if (compareclist(next,arr[i]))
 			{
-				if(xdis!=100000 && ((!gxflag && !lxflag && next.tx!=xdis) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
-				if(ydis!=100000 && ((!gyflag && !lyflag && next.ty!=ydis) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
+				if(xdis!=100000 && ((!gxflag && !lxflag && ((axflag)==(next.tx==xdis))) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
+				if(ydis!=100000 && ((!gyflag && !lyflag && ((ayflag)==(next.ty==ydis))) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
+				if(moveflag && (next.tx==0 && next.ty==0)) return 0;
 				if((endpatt.nx==0 && !emptyflag) && (i==0 || evolveflag) && n-i+1 >= MINGEN)
 				{
  					int popmin=100000;
@@ -860,7 +888,7 @@ int main(int argc, char **argv)
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:m",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -920,6 +948,12 @@ int main(int argc, char **argv)
 					xdis=stoi(ts.substr(1,ts.length()-1));
 					break;
 				}
+				if(ts[0]=='!')
+				{
+					axflag=1;
+					xdis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
 				xdis=stoi(ts);
 				break;
 			}
@@ -936,6 +970,12 @@ int main(int argc, char **argv)
 				if(ts[0]=='<')
 				{
 					lyflag=1;
+					ydis=stoi(ts.substr(1,ts.length()-1));
+					break;
+				}
+				if(ts[0]=='!')
+				{
+					ayflag=1;
 					ydis=stoi(ts.substr(1,ts.length()-1));
 					break;
 				}
@@ -958,6 +998,12 @@ int main(int argc, char **argv)
 			case 'c':
 			{
 				commonconst=atoi(optarg);
+				break;
+			}
+			
+			case 'm':
+			{
+				moveflag=1;
 				break;
 			}
 			
@@ -1011,7 +1057,7 @@ int main(int argc, char **argv)
 				if(ts=="x" || ts=="xtrans")
 				{
 					cout << "Input the desired bound on the translation of the top left of the bounding box of the pattern in x (where rightwards is positive). "
-					<< "An optional '>' or '<' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells to the right "
+					<< "An optional '>', '<', or '!' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells to the right "
 					<< "-x '>5' would specify that."<< endl;
 					
 					exit(0);
@@ -1020,7 +1066,7 @@ int main(int argc, char **argv)
 				if(ts=="y" || ts=="ytrans")
 				{
 					cout << "Input the desired bound on the translation of the top left of the bounding box of the pattern in y (where downwards is positive). "
-					<< "An optional '>' or '<' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells downward "
+					<< "An optional '>', '<', or '!' can be included to set more loose bounds. For example, if the desired translation is more than 5 cells downward "
 					<< "-y '>5' would specify that."<< endl;
 					
 					exit(0);
@@ -1049,6 +1095,12 @@ int main(int argc, char **argv)
 				{
 					cout << "Input the desired degree of commonness of the pattern in the specified rulespace. -c 8 will force any results to occur within 2^8 rules "
 					<< "or more in the rulespace provided with -q, -r, and/or -s."<< endl;
+					exit(0);
+				}
+				
+				if(ts=="m" || ts=="move")
+				{
+					cout << "Takes no arguments. Set to make all returned patterns have moved from their initial position (with the position as the top left corner "<< endl;
 					exit(0);
 				}
 				
@@ -1082,7 +1134,8 @@ int main(int argc, char **argv)
 					<< "-z or --no_exp is for turning off explosion detection.\n\n"
 					<< "-e or --evo is for turning on additional reporting of results that result from the evolution of the starting pattern, but do not include it.\n\n"
 					<< "-c or --comm is for setting the minimum commonness of a pattern, -c 'n' forces the pattern to work in at least 2^n rules in the given space.\n\n"
-					<< "There are 5 other constants to change at the top of the file, which set population bounds, "
+					<< "-m or --move is for turning on checking if the pattern moves from its intitial position.\n\n"
+					<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
 					<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
 					<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
 					exit(0);
