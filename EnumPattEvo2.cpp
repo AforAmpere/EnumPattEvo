@@ -8,9 +8,9 @@
 #include <getopt.h>
 
 #define POP (next.p<1000)
-#define MAXX 5
-#define MAXY 5
-#define MAXGEN 8000
+#define MAXX 20
+#define MAXY 20
+#define MAXGEN 600
 #define MINGEN 1
 
 //Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash.
@@ -1734,8 +1734,11 @@ int main(int argc, char **argv)
 							infile>>buff;
 						}
 						infile>>xflag;
-						if(xflag>MAXX) cout<<"The specified x width of "<<xflag<<"is too large for the set MAXX, please change MAXX to fit."<<endl;
-						exit(0);
+						if(xflag>MAXX) 
+						{
+							cout<<"The specified x width of "<<xflag<<"is too large for the set MAXX, please change MAXX to fit."<<endl;
+							exit(0);
+						}
 					}
 					if(buff=='y')
 					{
@@ -1744,8 +1747,11 @@ int main(int argc, char **argv)
 							infile>>buff;
 						}
 						infile>>yflag;
-						if(yflag>MAXY) cout<<"The specified y width of "<<yflag<<"is too large for the set MAXY, please change MAXY to fit."<<endl;
-						exit(0);
+						if(yflag>MAXY) 
+						{
+							cout<<"The specified y width of "<<yflag<<"is too large for the set MAXY, please change MAXY to fit."<<endl;
+							exit(0);
+						}
 					}
 					infile>>buff;
 				}
