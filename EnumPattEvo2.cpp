@@ -3,7 +3,6 @@
 #include <string>
 #include <ctime>
 #include <chrono>
-#include <vector>
 #include <algorithm>
 #include <array>
 #include <getopt.h>
@@ -14,6 +13,9 @@
 #define MAXGEN 8000
 #define MINGEN 1
 
+//Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash.
+//#define NORECURSE
+
 using namespace std;
 
 ofstream outfile;
@@ -21,11 +23,16 @@ ofstream outfile;
 const int translookup[512] = {0, 1, 2, 6, 1, 3, 6, 13, 2, 6, 4, 12, 5, 14, 17, 22, 51, 52, 53, 57, 52, 54, 57, 64, 53, 57, 55, 63, 56, 65, 68, 73, 2, 5, 4, 17, 6, 14, 12, 22, 7, 18, 10, 28, 18, 23, 28, 36, 53, 56, 55, 68, 57, 65, 63, 73, 58, 69, 61, 79, 69, 74, 79, 87, 1, 3, 5, 14, 8, 9, 16, 24, 6, 13, 17, 22, 16, 24, 30, 35, 52, 54, 56, 65, 59, 60, 67, 75, 57, 64, 68, 73, 67, 75, 81, 86, 5, 15, 11, 21, 16, 25, 26, 40, 18, 29, 27, 37, 31, 41, 39, 45, 56, 66, 62, 72, 67, 76, 77, 91, 69, 80, 78, 88, 82, 92, 90, 96, 2, 5, 7, 18, 5, 15, 18, 29, 4, 17, 10, 28, 11, 21, 27, 37, 53, 56, 58, 69, 56, 66, 69, 80, 55, 68, 61, 79, 62, 72, 78, 88, 4, 11, 10, 27, 17, 21, 28, 37, 10, 27, 20, 32, 27, 38, 32, 42, 55, 62, 61, 78, 68, 72, 79, 88, 61, 78, 71, 83, 78, 89, 83, 93, 6, 14, 18, 23, 16, 25, 31, 41, 12, 22, 28, 36, 26, 40, 39, 45, 57, 65, 69, 74, 67, 76, 82, 92, 63, 73, 79, 87, 77, 91, 90, 96, 17, 21, 27, 38, 30, 34, 39, 44, 28, 37, 32, 42, 39, 44, 47, 48, 68, 72, 78, 89, 81, 85, 90, 95, 79, 88, 83, 93, 90, 95, 98, 99, 1, 8, 5, 16, 3, 9, 14, 24, 5, 16, 11, 26, 15, 25, 21, 40, 52, 59, 56, 67, 54, 60, 65, 75, 56, 67, 62, 77, 66, 76, 72, 91, 6, 16, 17, 30, 13, 24, 22, 35, 18, 31, 27, 39, 29, 41, 37, 45, 57, 67, 68, 81, 64, 75, 73, 86, 69, 82, 78, 90, 80, 92, 88, 96, 3, 9, 15, 25, 9, 19, 25, 33, 14, 24, 21, 40, 25, 33, 34, 43, 54, 60, 66, 76, 60, 70, 76, 84, 65, 75, 72, 91, 76, 84, 85, 94, 14, 25, 21, 34, 24, 33, 40, 43, 23, 41, 38, 44, 41, 46, 44, 49, 65, 76, 72, 85, 75, 84, 91, 94, 74, 92, 89, 95, 92, 97, 95, 100, 6, 16, 18, 31, 14, 25, 23, 41, 17, 30, 27, 39, 21, 34, 38, 44, 57, 67, 69, 82, 65, 76, 74, 92, 68, 81, 78, 90, 72, 85, 89, 95, 12, 26, 28, 39, 22, 40, 36, 45, 28, 39, 32, 47, 37, 44, 42, 48, 63, 77, 79, 90, 73, 91, 87, 96, 79, 90, 83, 98, 88, 95, 93, 99, 13, 24, 29, 41, 24, 33, 41, 46, 22, 35, 37, 45, 40, 43, 44, 49, 64, 75, 80, 92, 75, 84, 92, 97, 73, 86, 88, 96, 91, 94, 95, 100, 22, 40, 37, 44, 35, 43, 45, 49, 36, 45, 42, 48, 45, 49, 48, 50, 73, 91, 88, 95, 86, 94, 96, 100, 87, 96, 93, 99, 96, 100, 99, 101};
 const char *intlookup[51]={"0","1c","1e","2c","2e","2k","2a","2i","2n","3c","3e","3k","3a","3i","3n","3y","3q","3j","3r","4c","4e","4k","4a","4i","4n","4y","4q","4j","4r","4t","4w","4z","5c","5e","5k","5a","5i","5n","5y","5q","5j","5r","6c","6e","6k","6a","6i","6n","7c","7e","8"};
 
+int initsymm=8;
+int endsymm=8;
+//Vertical, horizontal, left diag, right diag = 1,2,3,4
+int vhlr=0;
+int endvhlr=0;
+
 struct mainarr
 {
 	array<int,102> translist= {0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2};
-	array<array<int,MAXY+3>,MAXX+3> clist={0};
-	vector<int> trgbcl;
+	array<array<int,MAXY+3>,MAXX+3> clist={0}, trarr={0};
 	int tx,ty;
 	int nx,ny;
 	int p;
@@ -43,18 +50,200 @@ struct mainarr
 		((clist[x+1][y+1])<<8)];
 	}
 	
-	vector<int> totrans()
+	array<int,103> totrans()
 	{
-		vector<int> arrout;
-		for(int i=0;i<MAXX+2;i++)
+		array<int, 103> arrout;
+		int q=0,tr=0;
+		int d[102]={0};
+		switch(initsymm)
 		{
-			for(int j=0;j<MAXY+2;j++)
+			case 7:
 			{
-				if (translist[trans(i,j)]==2) arrout.push_back(trans(i,j));
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=i;j<(ny+3)/2;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
+			}
+			case 6:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=i;j<ny+2-i;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
+			}
+			case 5:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<(ny+3)/2;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
+			}
+			case 4:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<(ny+3)/2;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
+			}
+			case 3:
+			{
+				if(vhlr==3)
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=i;j<ny+2;j++)
+						{
+							q=trans(i,j);
+							trarr[i][j]=q;
+							if (translist[q]==2&&d[q]==0) 
+							{
+								arrout[tr]=q;
+								d[q]=1;
+								tr++;
+							}
+						}
+					}
+				}
+				else
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=0;j<ny+2-i;j++)
+						{
+							q=trans(i,j);
+							trarr[i][j]=q;
+							if (translist[q]==2&&d[q]==0) 
+							{
+								arrout[tr]=q;
+								d[q]=1;
+								tr++;
+							}
+						}
+					}
+				}
+				break;
+			}
+			case 2:
+			{
+				if(vhlr==1)
+				{
+					for(int i=0;i<(nx+3)/2;i++)
+					{
+						for(int j=0;j<ny+2;j++)
+						{
+							q=trans(i,j);
+							trarr[i][j]=q;
+							if (translist[q]==2&&d[q]==0) 
+							{
+								arrout[tr]=q;
+								d[q]=1;
+								tr++;
+							}
+						}
+					}
+				}
+				else
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=0;j<(ny+3)/2;j++)
+						{
+							q=trans(i,j);
+							trarr[i][j]=q;
+							if (translist[q]==2&&d[q]==0) 
+							{
+								arrout[tr]=q;
+								d[q]=1;
+								tr++;
+							}
+						}
+					}
+				}
+				break;
+			}
+			case 1:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<ny+2;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
+			}
+			default:
+			{
+				for(int i=0;i<nx+2;i++)
+				{
+					for(int j=0;j<ny+2;j++)
+					{
+						q=trans(i,j);
+						trarr[i][j]=q;
+						if (translist[q]==2&&d[q]==0) 
+						{
+							arrout[tr]=q;
+							d[q]=1;
+							tr++;
+						}
+					}
+				}
+				break;
 			}
 		}
-		sort(arrout.begin(),arrout.end());
-		arrout.erase(unique(arrout.begin(),arrout.end()),arrout.end());
+		arrout[102]=tr;
+		//sort(arrout.begin(),arrout.begin()+tr);
 		return arrout;
 	}
 	
@@ -63,60 +252,405 @@ struct mainarr
 		int mx=MAXX+4,my=MAXY+4,p=0;
 		int bx=-1,by=-1;
 		array<array<int,MAXY+3>,MAXX+3> tmp={0};
-		for(int i=0;i<MAXX+2;i++)
+		switch(initsymm)
 		{
-			for(int j=0;j<MAXY+2;j++)
+			case 7:
 			{
-				if (t[trans(i,j)]==1)
+				for(int i=0;i<(nx+3)/2;i++)
 				{
-					if (i<mx) mx = i;
-					if (j<my) my = j;
-					if (i>bx) bx = i;
-					if (j>by) by = j;
-					p++;
-					tmp[i][j]=1;
+					for(int j=i;j<(ny+3)/2;j++)
+					{
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							// a=(i==j);
+							// b=(j==ny+1-j);
+							if(!(i==j)&&!(j==ny+1-j)) 
+							{
+								p+=8;
+								tmp[i][j]=1;
+								tmp[j][i]=1;
+								tmp[nx+1-i][j]=1;
+								tmp[j][nx+1-i]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+								tmp[ny+1-j][nx+1-i]=1;
+								tmp[i][ny+1-j]=1;
+								tmp[ny+1-j][i]=1;
+							}
+							if((i==j)&&!(j==ny+1-j)) 
+							{
+								p+=4;
+								tmp[i][j]=1;
+								tmp[nx+1-i][j]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+								tmp[i][ny+1-j]=1;
+							}
+							if(!(i==j)&&(j==ny+1-j)) 
+							{
+								p+=4;
+								tmp[i][j]=1;
+								tmp[j][i]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+								tmp[ny+1-j][nx+1-i]=1;
+							}
+							if((i==j)&&(j==ny+1-j)) 
+							{
+								p+=1;
+								tmp[i][j]=1;
+							}
+						}
+					}
 				}
+				my=mx;
+				bx=nx-mx+1;
+				by=bx;
+				break;
+			}
+			case 6:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=i;j<ny+2-i;j++)
+					{
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							// a=(i==j);
+							// b=(i==ny+1-j);
+							if(!(i==j)&&!(i==ny+1-j))
+							{								
+								p+=4;
+								tmp[i][j]=1;
+								tmp[j][i]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+								tmp[ny+1-j][nx+1-i]=1;
+							}
+							if((i==j)!=(i==ny+1-j)) 
+							{
+								p+=2;
+								tmp[i][j]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+							}
+							if((i==j)&&(i==ny+1-j))
+							{								
+								p+=1;
+								tmp[i][j]=1;
+							}
+						}
+					}
+				}
+				my=mx;
+				bx=nx-mx+1;
+				by=bx;
+				break;
+			}
+			case 5:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<(ny+3)/2;j++)
+					{
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							if (j<my) my = j;
+							if(!(i==nx+1-i)&&!(j==ny+1-j)) 
+							{
+								p+=4;
+								tmp[i][j]=1;
+								tmp[nx+1-i][j]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+								tmp[i][ny+1-j]=1;
+							}
+							if((i==nx+1-i)!=(j==ny+1-j)) 
+							{
+								p+=2;
+								tmp[i][j]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+							}
+							if((i==nx+1-i)&&(j==ny+1-j)) 
+							{
+								tmp[i][j]=1;
+								p+=1;
+							}
+							// tmp[i][j]=1;
+							// tmp[nx+1-i][j]=1;
+							// tmp[nx+1-i][ny+1-j]=1;
+							// tmp[i][ny+1-j]=1;
+						}
+					}
+				}
+				bx=nx-mx+1;
+				by=ny-my+1;
+				break;
+			}
+			case 4:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<(ny+2)/2;j++)
+					{
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							if (j<mx) mx = j;
+							p+=4;
+							tmp[i][j]=1;
+							tmp[j][nx+1-i]=1;
+							tmp[nx+1-i][ny+1-j]=1;
+							tmp[ny+1-j][i]=1;
+						}
+					}
+				}
+				if(nx%2==1&&t[trarr[(nx+1)/2][(ny+1)/2]]==1)
+				{
+					tmp[(nx+1)/2][(ny+1)/2]=1;
+					p+=1;
+				}
+				my=mx;
+				bx=nx-mx+1;
+				by=bx;
+				break;
+			}
+			case 3:
+			{
+				if(vhlr==3)
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=i;j<ny+2;j++)
+						{
+							if (t[trarr[i][j]]==1)
+							{
+								if (i<mx) mx = i;
+								if (j>by) by = j;
+								//a=(i!=j);
+								if(i!=j) 
+								{
+									p+=2;
+									tmp[i][j]=1;
+									tmp[j][i]=1;
+								}
+								else 
+								{
+									p+=1;
+									tmp[i][j]=1;
+								}
+							}
+						}
+					}
+					my=mx;
+					bx=by;
+				}
+				else
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=0;j<ny+2-i;j++)
+						{
+							if (t[trarr[i][j]]==1)
+							{
+								if (i<mx) mx = i;
+								if (j<my) my = j;
+								//a=(i!=ny+1-j);
+								if(i!=ny+1-j) 
+								{
+									p+=2;
+									tmp[i][j]=1;
+									tmp[ny+1-j][nx+1-i]=1;
+								}
+								else 
+								{
+									p+=1;
+									tmp[i][j]=1;
+								}
+							}
+						}
+					}
+					by=nx-mx+1;
+					bx=ny-my+1;
+				}
+				break;
+			}
+			case 2:
+			{
+				if(vhlr==1)
+				{
+					for(int i=0;i<(nx+3)/2;i++)
+					{
+						for(int j=0;j<ny+2;j++)
+						{
+							if (t[trarr[i][j]]==1)
+							{
+								if (i<mx) mx = i;
+								if (j<my) my = j;
+								if (j>by) by = j;
+								//a=(i!=nx+1-i);
+								if(i!=nx+1-i) 
+								{
+									p+=2;
+									tmp[i][j]=1;
+									tmp[nx+1-i][j]=1;
+								}
+								else 
+								{
+									p+=1;
+									tmp[i][j]=1;
+								}
+							}
+						}
+					}
+					bx=nx-mx+1;
+				}
+				else
+				{
+					for(int i=0;i<nx+2;i++)
+					{
+						for(int j=0;j<(ny+3)/2;j++)
+						{
+							if (t[trarr[i][j]]==1)
+							{
+								if (i<mx) mx = i;
+								if (i>bx) bx = i;
+								if (j<my) my = j;
+								//a=(j!=ny+1-j);
+								if(j!=ny+1-j) 
+								{
+									p+=2;
+									tmp[i][j]=1;
+									tmp[i][ny+1-j]=1;
+								}
+								else 
+								{
+									p+=1;
+									tmp[i][j]=1;
+								}
+							}
+						}
+					}
+					by=ny-my+1;
+				}
+				break;
+			}
+			case 1:
+			{
+				for(int i=0;i<(nx+3)/2;i++)
+				{
+					for(int j=0;j<ny+2;j++)
+					{
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							if (j<my) my = j;
+							if (j>by) by = j;
+							//a=(i!=nx+1-i);
+							if(i!=nx+1-i) 
+							{
+								p+=2;
+								tmp[i][j]=1;
+								tmp[nx+1-i][ny+1-j]=1;
+							}
+							else
+							{								
+								p+=1;
+								tmp[i][j]=1;
+							}
+						}
+					}
+				}
+			}
+			case 0:
+			{
+				for(int i=0;i<nx+2;i++)
+				{
+					for(int j=0;j<ny+2;j++)
+					{
+						//if (trans(i,j)) j=j;
+						if (t[trarr[i][j]]==1)
+						{
+							if (i<mx) mx = i;
+							if (j<my) my = j;
+							if (i>bx) bx = i;
+							if (j>by) by = j;
+							p++;
+							tmp[i][j]=1;
+						}
+					}
+				}
+				break;
+			}
+			default:
+			{
+				for(int i=0;i<nx+2;i++)
+				{
+					for(int j=0;j<ny+2;j++)
+					{
+						//if (trans(i,j)) j=j;
+						if (t[trans(i,j)]==1)
+						{
+							if (i<mx) mx = i;
+							if (j<my) my = j;
+							if (i>bx) bx = i;
+							if (j>by) by = j;
+							p++;
+							tmp[i][j]=1;
+						}
+					}
+				}
+				break;
 			}
 		}
 		bx-=mx-1;
 		by-=my-1;
 		if (mx==MAXX+4)
 		{
-			tmp[0][2] = MAXX+4;
-			tmp[1][0] = MAXY+4;
-			tmp[2][0] = p;
-			z = tmp;
+			z[0][2] = MAXX+4;
+			z[1][0] = MAXY+4;
+			z[2][0] = p;
+			return;
 		}
 		if (mx==1 && my==1) 
 		{
-			tmp[0][0] = tx+mx-1;
-			tmp[0][1] = ty+my-1;
-			tmp[0][2] = bx;
-			tmp[1][0] = by;
-			tmp[2][0] = p;
-			z = tmp;
-		}
-		array<array<int,MAXY+3>,MAXX+3> tmp2={0};
-		for(int i=1;i<MAXX+3-mx;i++)
-		{
-			for(int j=1;j<MAXY+3-my;j++)
+			for(int i=1;i<bx+1;i++)
 			{
-				z[i][j] = tmp[i+mx-1][j+my-1];
+				for(int j=1;j<by+1;j++)
+				{
+					z[i][j] = tmp[i][j];
+				}
 			}
+			z[0][0] = tx+mx-1;
+			z[0][1] = ty+my-1;
+			z[0][2] = bx;
+			z[1][0] = by;
+			z[2][0] = p;
+			return;
 		}
-		z[0][0] = tx+mx-1;
-		z[0][1] = ty+my-1;
-		z[0][2] = bx;
-		z[1][0] = by;
-		z[2][0] = p;
-		//return {0};
-		//z.clist = tmp2;
+		if (mx!=1 || my!=1)
+		{
+			for(int i=1;i<bx+1;i++)
+			{
+				for(int j=1;j<by+1;j++)
+				{
+					z[i][j] = tmp[i+mx-1][j+my-1];
+				}
+			}
+			z[0][0] = tx+mx-1;
+			z[0][1] = ty+my-1;
+			z[0][2] = bx;
+			z[1][0] = by;
+			z[2][0] = p;
+			return;
+		}
 	}
 };
 
+#ifndef NORECURSE
 mainarr arr[MAXGEN];
+#endif
+#ifdef NORECURSE
+mainarr* arr = new mainarr[MAXGEN];
+#endif
 mainarr q;
-int initsymm=8;
 int xdis=100000;
 int ydis=100000;
 bool gxflag=0;
@@ -254,10 +788,10 @@ void printint128(__int128 n)
 	cout << s;
 }
 
-void combo(mainarr& curr, vector<int>& tlist, __int128 index)
+void combo(mainarr& curr, array<int,103>& tlist, __int128 index)
 {
 	q.clist = {0};
-	const int y = tlist.size();
+	const int y = tlist[102];
 	int binlist[y];
 	//mainarr next;
 	for(int i = y-1;i>=0;i--)
@@ -307,8 +841,18 @@ int initsymmetry(mainarr a)
 	
 	if(!(arc|afxc|afyc|afxyc|afxrc|afyrc)) return 0; //C1
 	if(!arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 1; //C2
-	if(!arc&(afxc!=afyc)&!afxyc&!afxrc&!afyrc) return 2; //D2+
-	if(!arc&!afxc&!afyc&!afxyc&(afxrc!=afyrc)) return 3; //D2x
+	if(!arc&(afxc!=afyc)&!afxyc&!afxrc&!afyrc) 
+	{
+		if (afxc) return 10;
+		else return 18;
+		//return 2; //D2+
+	}
+	if(!arc&!afxc&!afyc&!afxyc&(afxrc!=afyrc)) 
+	{
+		if (afxrc) return 27;
+		else return 35;
+		//return 3; //D2x
+	}
 	if(arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) return 4; //C4
 	if(!arc&afxc&afyc&afxyc&!afxrc&!afyrc) return 5; //D4+
 	if(!arc&!afxc&!afyc&afxyc&afxrc&afyrc) return 6; //D4x
@@ -326,38 +870,36 @@ bool symmetrycheck(mainarr& a)
 		}
 		case 6:
 		{
-			for(int j=1;j<a.ny+1;j++)
+			for(int i=1;i<(a.nx+3)/2;i++)
 			{
-				for(int i=1;i<a.nx+1;i++)
+				for(int j=i;j<a.ny+1-i;j++)
 				{
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) return 1;
 				}
 			}
-			if(!arc) return 1;
 			return 0;
 		}
 		case 5:
 		{
-			for(int j=1;j<a.ny+1;j++)
+			if (a.nx!=a.ny) return 1;
+			for(int j=1;j<(a.ny+3)/2;j++)
 			{
-				for(int i=1;i<a.nx+1;i++)
+				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+					if (a.clist[i][j]!=a.clist[j][i]) return 1;
 				}
 			}
-			if(!arc) return 1;
 			return 0;
 		}
 		case 4:
 		{
-			for(int j=1;j<a.ny+1;j++)
+			for(int j=1;j<(a.ny+3)/2;j++)
 			{
-				for(int i=1;i<a.nx+1;i++)
+				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
+					if (a.clist[i][j]!=a.clist[j][i]) return 1;
 				}
 			}
-			if(!afxc) return 1;
 			return 0;
 		}
 		case 3:
@@ -419,6 +961,71 @@ bool symmetrycheck(mainarr& a)
 	}
 }
 
+bool symmetrycheck2(mainarr& a)
+{
+	int s,v;
+	bool arc=1,afxc=1,afyc=1,afxyc=1,afxrc=1,afyrc=1;
+	
+	for(int j=1;j<a.ny+1;j++)
+	{
+		for(int i=1;i<a.nx+1;i++)
+		{
+			if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
+			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
+			if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
+			if (a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+			if (a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+		}
+	}
+	while(1)
+	{
+		if(!(arc|afxc|afyc|afxyc|afxrc|afyrc)) {s=0;break;} //C1
+		if(!arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) {s=1;break;} //C2
+		if(!arc&(afxc!=afyc)&!afxyc&!afxrc&!afyrc) 
+		{
+			if (afxc) v=1;
+			else v=2;
+			s=2; //D2+
+			break;
+		}
+		if(!arc&!afxc&!afyc&!afxyc&(afxrc!=afyrc)) 
+		{
+			if (afxrc) v=3;
+			else v=4;
+			s=3; //D2x
+			break;
+		}
+		if(arc&!afxc&!afyc&afxyc&!afxrc&!afyrc) {s=4;break;} //C4
+		if(!arc&afxc&afyc&afxyc&!afxrc&!afyrc) {s=5;break;} //D4+
+		if(!arc&!afxc&!afyc&afxyc&afxrc&afyrc) {s=6;break;} //D4x
+		s=7;break; //D8
+	}
+	
+	if
+	(
+	(s==endsymm&&v!=endvhlr)||
+	(s==7&&endsymm!=7)||
+	(s==6&&endsymm!=6&&endsymm!=7)||
+	(s==5&&endsymm!=5&&endsymm!=7)||
+	(s==4&&endsymm!=4&&endsymm!=7)||
+	(s==3&&endsymm!=3&&endsymm!=6&&endsymm!=7)||
+	(s==2&&endsymm!=2&&endsymm!=5&&endsymm!=7)||
+	(s==1&&(endsymm==0||endsymm==2||endsymm==3))||
+	(s==7&&a.nx%2!=endpatt.nx%2)||
+	(s==6&&a.nx%2!=endpatt.nx%2)||
+	(s==5&&(a.nx%2!=endpatt.nx%2||a.ny%2!=endpatt.ny%2))||
+	(s==4&&a.nx%2!=endpatt.nx%2)||
+	(s==2&&(v==1&&a.nx%2!=endpatt.nx%2))||
+	(s==2&&(v==2&&a.ny%2!=endpatt.ny%2))||
+	(s==1&&(a.nx%2!=endpatt.nx%2||a.ny%2!=endpatt.ny%2))
+	)
+	{
+		return 0;
+	}
+	return 1;
+}
+
 int checkfrontend(mainarr& next, int initi)
 {
 	int t=1,r=1,b=1,l=1,b1e=0,b2c=0,b2a=0,b3i=0;
@@ -448,10 +1055,10 @@ int checkfrontend(mainarr& next, int initi)
 	if (b2a&&b2c) dir=b2a2cfrontend;
 	if (b2a&&b3i) dir=b2a3ifrontend;
 	
-	if (dir%2==1) t=0;
-	if (dir%4>>1==1) r=0;
-	if (dir%8>>2==1) b=0;
-	if (dir>>3==1) l=0;
+	if ((dir%2)==1||((initsymm==7||initsymm==6||initsymm==4||(initsymm==3&&vhlr==3))&&!initi)) t=0;
+	if ((dir%4)>>1==1||((initsymm!=0&&!(initsymm==2&&vhlr==2))&&!initi)) r=0;
+	if ((dir%8)>>2==1||((initsymm!=0&&!(initsymm==2&&vhlr==1)&&!(initsymm==3&&vhlr==3))&&!initi)) b=0;
+	if ((dir>>3)==1) l=0;
 	
 	//cout << b1e << b2c << b2a << b3i << initi << endl;
 	
@@ -651,7 +1258,7 @@ bool checktrans(mainarr& next,int n)
 			{
 				if (next.translist[i]==1)
 				{
-					outfile << intlookup[i%51];
+					outfile << intlookup[i-51];
 				}
 			}
 			outfile << ": " << n+1 << endl;
@@ -661,31 +1268,8 @@ bool checktrans(mainarr& next,int n)
 	}
 	int w = next.nx;
 	int h = next.ny;
-	// if(n>30)
-	// {
-			// outfile << "B";
-			// for (int i=0;i<51;i++)
-			// {
-				// if (next.translist[i]==1) 
-				// {
-					// outfile << intlookup[i];
-				// }
-			// }
-			// outfile << "/S";
-			// for (int i=51;i<102;i++)
-			// {
-				// if (next.translist[i]==1)
-				// {
-					// outfile << intlookup[i%51];
-				// }
-			// }
-			// outfile << ": " << n+1 << endl;
-			// pattcount++;
-			// return 0;
-	// }
 	if(w>MAXX) return 0;
 	if(h>MAXY) return 0;
-	//if(w>=3 && h>=3) return 0;
 	if(!POP) return 0;
 	int poss=0;
 	for (int k=0;k<102;k++)
@@ -695,6 +1279,7 @@ bool checktrans(mainarr& next,int n)
 	if (poss<commonconst) return 0;
 	if(explodeflag&&!checkfrontend(next,0)) return 0;
 	if(explodeflag&& endpatt.nx==0 && (next.translist[2]==1 && next.translist[6]==1)) return 0;
+	if(endpatt.nx!=0 && !symmetrycheck2(next)) return 0;
 	if (endpatt.nx!=0 && compareclist(next,endpatt) && n+1 >= MINGEN)
 	{
 		if(xdis!=100000 && ((!gxflag && !lxflag && ((axflag)==(next.tx==xdis))) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
@@ -729,7 +1314,7 @@ bool checktrans(mainarr& next,int n)
 			{
 				if(xdis!=100000 && ((!gxflag && !lxflag && ((axflag)==(next.tx==xdis))) || (gxflag && !lxflag && next.tx<=xdis) || (lxflag && !gxflag && next.tx>=xdis))) return 0;
 				if(ydis!=100000 && ((!gyflag && !lyflag && ((ayflag)==(next.ty==ydis))) || (gyflag && !lyflag && next.ty<=ydis) || (lyflag && !gyflag && next.ty>=ydis))) return 0;
-				if(moveflag && (next.tx==0 && next.ty==0)) return 0;
+				if(moveflag && (next.tx-arr[i].tx==0 && next.ty-arr[i].ty==0)) return 0;
 				if((endpatt.nx==0 && !emptyflag) && (i==0 || evolveflag) && n-i+1 >= MINGEN)
 				{
  					int popmin=100000;
@@ -754,7 +1339,7 @@ bool checktrans(mainarr& next,int n)
 							outfile << intlookup[i%51];
 						}
 					}
-					outfile << ": (" << next.tx-arr[i].tx << "," << next.ty-arr[i].ty << ")/" << n-i+1 << ", Minpop:" << popmin << ", 2^" << poss << endl;
+					outfile << ": (" << next.tx-arr[i].tx << "," << next.ty-arr[i].ty << ")/" << n-i+1 << ", Minpop:" << popmin << ", 2^"<< poss << endl;
 					pattcount++;
 				}
 				return 0;
@@ -771,22 +1356,23 @@ int nflag=0;
 
 void branch(int n)
 {
-	if (nflag>0 && pattcount>=nflag) return;
-	vector<int> trstr = arr[n].totrans();
-	__int128 b = intpow(trstr.size());
-	for(__int128 i=0;i<b;i++)
+	//if (nflag>0 && pattcount>=nflag) return;
+	array<int,103> trstr = arr[n].totrans();
+	__int128 b = intpow(trstr[102]);
+	for(__int128 i=0;i<b &&!(nflag>0 && pattcount>=nflag);i++)
 	{
+		if (nflag>0 && pattcount>=nflag) break;
 		inc++;
 		postotalindex[n][0]=i;postotalindex[n][1]=b;
-		if(inc%1000000==0)
+		if(inc%5000000==0)
 		{
 			cout << "Depth: " << n+1 << ", progress: ";
-			for(int q=0; q<n+1;q++)
+			for(int j=0; j<n+1;j++)
 			{
 				cout << "[";
-				printint128(postotalindex[q][0]);
+				printint128(postotalindex[j][0]);
 				cout << "/";
-				printint128(postotalindex[q][1]);
+				printint128(postotalindex[j][1]);
 				cout << "],";
 				
 			}
@@ -799,9 +1385,7 @@ void branch(int n)
 		{
 			arr[n+1]=q;
 			branch(n+1);
-		}		
-		if (nflag>0 && pattcount>=nflag) break;
-		postotalindex[n][0]=0;postotalindex[n][1]=0;
+		}
 	}	
 }
 
@@ -884,11 +1468,12 @@ int main(int argc, char **argv)
 		{"comm", 1,0,'c'},
 		{"xtrans", 1,0,'x'},
 		{"ytrans", 1,0,'y'},
+		{"infile", 1,0,'i'}
 	};
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:m",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:mi:",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -1104,6 +1689,18 @@ int main(int argc, char **argv)
 					exit(0);
 				}
 				
+				if(ts=="i" || ts=="infile")
+				{
+					cout << "Takes an input file as an argument. This reads a generation count and an RLE in Golly format from a file, and sets the searched pattern"<<
+					"normally set by -p to said RLE, with the rulespace set to be the one where the pattern matches the behavior in the given rule for the amount"
+					<<"of generations specified at the top of the file. An example of the format is as follows:"<< endl<<endl;
+					cout<< "20"<<endl;
+					cout<< "x = 3, y = 4, rule = B3/S23"<<endl;
+					cout<< "2o$b2o$2o$o!"<<endl<<endl;
+					cout<<"This will search the pattern 2o$b2o$2o$o! in the rulespace where it evolves the same as it does in B3/S23 for the first 20 generations."<<endl;
+					exit(0);
+				}
+				
 				cout << "Command not found." << endl;
 				exit(0);
 
@@ -1116,15 +1713,148 @@ int main(int argc, char **argv)
 				break;
 			}
 			
+			case 'i':
+			{
+				ifstream infile(optarg);
+				if(!infile.is_open())
+				{
+					cout<<"File not found. Exiting."<<endl;
+					exit(0);
+				}
+				int run;
+				infile>>run;
+				char buff=0;
+				int xflag=-1, yflag=-1;
+				while(buff!='B')
+				{
+					if(buff=='x')
+					{
+						while(buff!='=')
+						{
+							infile>>buff;
+						}
+						infile>>xflag;
+						if(xflag>MAXX) cout<<"The specified x width of "<<xflag<<"is too large for the set MAXX, please change MAXX to fit."<<endl;
+						exit(0);
+					}
+					if(buff=='y')
+					{
+						while(buff!='=')
+						{
+							infile>>buff;
+						}
+						infile>>yflag;
+						if(yflag>MAXY) cout<<"The specified y width of "<<yflag<<"is too large for the set MAXY, please change MAXY to fit."<<endl;
+						exit(0);
+					}
+					infile>>buff;
+				}
+				string strbuff;
+				getline(infile,strbuff);
+				int k=0, bs, numflag, minusflag, prevnum;
+				bs=0; prevnum=0;
+				mainarr incoming={0};
+				for (char c:strbuff)
+				{
+					if (c=='S' || c=='s') {bs=1; prevnum=0;}
+					if (c>46 && c<58) 
+					{
+						if(prevnum)
+						{
+							for (int i=0;i<13;i++) incoming.translist[lookup2[117*bs+13*numflag+i]]=1;
+						}
+						numflag=c-48;
+						if (k==strbuff.length()-1)
+						{
+							for (int i=0;i<13;i++) incoming.translist[lookup2[117*bs+13*numflag+i]]=1;
+						}
+						prevnum=1;
+						minusflag=0;
+					}
+					if (c=='-') 
+					{
+						for (int j=0;j<13;j++) incoming.translist[lookup2[117*bs+13*numflag+j]]=1;
+						minusflag=1;
+						prevnum=0;
+					}
+					if (c>96 && c<123)
+					{
+						prevnum=0;
+						switch (c)
+						{
+							case 'c': incoming.translist[lookup2[117*bs+13*numflag]]=1-minusflag; break;
+							case 'e': incoming.translist[lookup2[117*bs+13*numflag+1]]=1-minusflag; break;
+							case 'k': incoming.translist[lookup2[117*bs+13*numflag+2]]=1-minusflag; break;
+							case 'a': incoming.translist[lookup2[117*bs+13*numflag+3]]=1-minusflag; break;
+							case 'i': incoming.translist[lookup2[117*bs+13*numflag+4]]=1-minusflag; break;
+							case 'n': incoming.translist[lookup2[117*bs+13*numflag+5]]=1-minusflag; break;
+							case 'y': incoming.translist[lookup2[117*bs+13*numflag+6]]=1-minusflag; break;
+							case 'q': incoming.translist[lookup2[117*bs+13*numflag+7]]=1-minusflag; break;
+							case 'j': incoming.translist[lookup2[117*bs+13*numflag+8]]=1-minusflag; break;
+							case 'r': incoming.translist[lookup2[117*bs+13*numflag+9]]=1-minusflag; break;
+							case 't': incoming.translist[lookup2[117*bs+13*numflag+10]]=1-minusflag; break;
+							case 'w': incoming.translist[lookup2[117*bs+13*numflag+11]]=1-minusflag; break;
+							case 'z': incoming.translist[lookup2[117*bs+13*numflag+12]]=1-minusflag; break;
+						}
+					}
+					k++;
+				}
+				incoming.translist[0]=0;
+				string rlebuff;
+				while(infile>>buff)
+				{
+					if(buff!='\r' && buff!='\n') rlebuff+=buff;
+				}
+				incoming.clist=RLEtocelllist(rlebuff);
+				incoming.tx=0,incoming.ty=0;
+				incoming.nx=incoming.clist[0][0],incoming.ny=incoming.clist[0][1];
+				incoming.p = incoming.clist[2][0];
+				incoming.clist[0][0]=0,incoming.clist[0][1]=0,incoming.clist[2][0]=0;
+				initsymm=0;
+				array<int,103> trstr;
+				array<int,102> tmp;
+				while(run>0)
+				{
+					tmp=incoming.translist;
+					for(int i=1;i<102;i++)
+					{
+						incoming.translist[i]=2;
+					}
+					trstr = incoming.totrans();
+					incoming.translist=tmp;
+					for(int i=0;i<trstr[102];i++)
+					{
+						arr[0].translist[trstr[i]]=incoming.translist[trstr[i]];
+					}
+					q.clist={0};
+					incoming.evolve(q.clist,incoming.translist);
+					incoming.clist=q.clist;
+					incoming.tx = incoming.clist[0][0];
+					incoming.ty = incoming.clist[0][1];
+					incoming.nx = incoming.clist[0][2];
+					incoming.ny = incoming.clist[1][0];
+					incoming.p = incoming.clist[2][0];
+					incoming.clist[0][0] = 0,incoming.clist[0][1] = 0;
+					incoming.clist[0][2] = 0,incoming.clist[1][0] = 0;
+					incoming.clist[2][0] = 0;
+					run--;
+				}
+				initsymm=8;
+				RLE = rlebuff;
+				break;
+			}
+			
 			case ':':
 			{
 				if (optopt=='h')
 				{
 					cout
-					<<"\n-h or --help pulls up this message. Putting a hyphenless argument after -h will give more info on it.\n\n"
+					<<"\n-h or --help pulls up this message. Putting a hyphenless argument after -h will give more info on\n"
+					<<"it.\n\n"
 					<< "-p is for setting the pattern, use a headerless RLE for this in quotes, i.e. -p '3o$bo$5bo'.\n\n"
 					<< "-f or --file is for setting the output file of the results.\n\n"
-					<< "-t or --target is for setting an optional target pattern that is not the original set pattern,\nin the same format as -p.\n\n"
+					<< "-t or --target is for setting an optional target pattern that is not the original set pattern, in\n"
+				    << "the same format as -p.\n\n"
 					<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
 					<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
 					<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
@@ -1132,12 +1862,17 @@ int main(int argc, char **argv)
 					<< "-y or --ytrans is for setting the bounds on the translation of the bounding box in y.\n\n"
 					<< "-n or --num is for setting the number of results to quit when reached.\n\n"
 					<< "-z or --no_exp is for turning off explosion detection.\n\n"
-					<< "-e or --evo is for turning on additional reporting of results that result from the evolution of the starting pattern, but do not include it.\n\n"
-					<< "-c or --comm is for setting the minimum commonness of a pattern, -c 'n' forces the pattern to work in at least 2^n rules in the given space.\n\n"
+					<< "-e or --evo is for turning on additional reporting of results that result from the evolution of\n"
+					<<"the starting pattern, but do not include it.\n\n"
+					<< "-c or --comm is for setting the minimum commonness of a pattern, -c 'n' forces the pattern to work\n"
+					<<"in at least 2^n rules in the given space.\n\n"
 					<< "-m or --move is for turning on checking if the pattern moves from its intitial position.\n\n"
-					<< "There are 6 other constants to change at the top of the file, which set maximum population,\nminimum population, "
-					<< "maximum horizontal bounding box, maximum vertical bounding box,\nmaximum generation depth, and minimum generation depth to report respectively.\n"
-					<< "These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
+					<< "-i or --infile is for specifying an RLE (in Golly format, without comments), and a generation count\n"
+					<<"to match the given pattern in the given rule. See -h i for more details\n\n"
+					<< "There are 5 other constants to change at the top of the file, which set population bounds, maximum\n"
+					<<"horizontal bounding box, maximum vertical bounding box, maximum generation depth, and minimum\n"
+					<<"generation depth to report, respectively.\n"
+					<<"These must be set in the .cpp file, and it must be compiled again if these are changed.\n\n";
 					exit(0);
 				}
 			}
@@ -1256,7 +1991,8 @@ int main(int argc, char **argv)
 	
 	outfile.open(file);
 	outfile.close();
-	
+	//for(int c:arr[0].translist) cout<<c<<",";
+	//cout<<endl;
 	arr[0].clist = RLEtocelllist(RLE);
 	if (arr[0].clist[1][0])
 	{
@@ -1268,19 +2004,38 @@ int main(int argc, char **argv)
 	arr[0].nx=arr[0].clist[0][0],arr[0].ny=arr[0].clist[0][1];
 	arr[0].p = arr[0].clist[2][0];
 	arr[0].clist[0][0]=0,arr[0].clist[0][1]=0,arr[0].clist[2][0]=0;
-	initsymm=initsymmetry(arr[0]);
+	int x=initsymmetry(arr[0]);
+	initsymm=x%8;
+	vhlr=x/8;
 	if (endpatt.nx!=0)
 	{
 		cout << "|\nv\n\n";
-		for (int j=1;j<endpatt.ny+1;j++)
+	
+		int y=initsymmetry(endpatt);
+		endsymm=y%8;
+		endvhlr=y/8;
+		if
+		(
+		(initsymm==endsymm&&vhlr!=endvhlr)||
+		(initsymm==7&&endsymm!=7)||
+		(initsymm==6&&endsymm!=6&&endsymm!=7)||
+		(initsymm==5&&endsymm!=5&&endsymm!=7)||
+		(initsymm==4&&endsymm!=4&&endsymm!=7)||
+		(initsymm==3&&endsymm!=3&&endsymm!=6&&endsymm!=7)||
+		(initsymm==2&&endsymm!=2&&endsymm!=5&&endsymm!=7)||
+		(initsymm==1&&(endsymm==0||endsymm==2||endsymm==3))||
+		(initsymm==7&&arr[0].nx%2!=endpatt.nx%2)||
+		(initsymm==6&&arr[0].nx%2!=endpatt.nx%2)||
+		(initsymm==5&&(arr[0].nx%2!=endpatt.nx%2||arr[0].ny%2!=endpatt.ny%2))||
+		(initsymm==4&&arr[0].nx%2!=endpatt.nx%2)||
+		(initsymm==2&&(vhlr==1&&arr[0].nx%2!=endpatt.nx%2))||
+		(initsymm==2&&(vhlr==2&&arr[0].ny%2!=endpatt.ny%2))||
+		(initsymm==1&&(arr[0].nx%2!=endpatt.nx%2||arr[0].ny%2!=endpatt.ny%2))
+		)
 		{
-			for(int i=1;i<endpatt.nx+1;i++)
-			{
-				cout << endpatt.clist[i][j] << " " ;
-			}
-			cout << endl;
+			cout<<"Impossible to get from start to target in INT."<<endl;
+			exit(0);
 		}
-		cout << endl;
 	}
 	cout << "initsymm: " << initsymm << endl << endl;
 	outfile.open(file,ios_base::app);
@@ -1294,13 +2049,82 @@ int main(int argc, char **argv)
 	
 	//cout << b1efrontend << "," << b1e2cfrontend << "," << b2afrontend << "," << b2a2cfrontend << "," << b2a3ifrontend << endl;
 	
-	if(b1efrontend&(b1efrontend-1)) b1efrontend=0;
-	if(b1e2cfrontend&(b1e2cfrontend-1)) b1e2cfrontend=0;
-	if(b2afrontend&(b2afrontend-1)) b2afrontend=0;
-	if(b2a2cfrontend&(b2a2cfrontend-1)) b2a2cfrontend=0;
-	if(b2a3ifrontend&(b2a3ifrontend-1)) b2a3ifrontend=0;
+	if(!endpatt.nx)
+	{
+		if(b1efrontend&(b1efrontend-1)) b1efrontend=0;
+		if(b1e2cfrontend&(b1e2cfrontend-1)) b1e2cfrontend=0;
+		if(b2afrontend&(b2afrontend-1)) b2afrontend=0;
+		if(b2a2cfrontend&(b2a2cfrontend-1)) b2a2cfrontend=0;
+		if(b2a3ifrontend&(b2a3ifrontend-1)) b2a3ifrontend=0;
+	}
 	
-	if ((arr[0].translist[2]!=1 || arr[0].translist[6]!=1) || endpatt.nx!=0 ) branch(0);
+	int n=0;
+	if ((arr[0].translist[2]!=1 || arr[0].translist[6]!=1) || endpatt.nx!=0 )
+	{
+		#ifndef NORECURSE
+		branch(0);
+		#endif
+		#ifdef NORECURSE
+		int initi=1;
+		array<int,103> trstr[MAXGEN];
+		__int128 b[MAXGEN]={0};
+		__int128 it[MAXGEN]={0};
+		while(n>=0)
+		{
+			outside:
+			trstr[n] = arr[n].totrans();
+			b[n] = intpow(trstr[n][102]);
+			it[n]=0;
+			while(it[n]<b[n])
+			{
+				inside:
+				if(it[n]>=b[n]) break;
+				if (nflag>0 && pattcount>=nflag) break;
+				inc++;
+				if(inc%5000000==0)
+				{
+					cout << "Depth: " << n+1 << ", progress: ";
+					for(int q=0; q<n+1;q++)
+					{
+						cout << "[";
+						printint128(it[q]);
+						cout << "/";
+						printint128(b[q]);
+						cout << "],";
+						
+					}
+					cout << endl << "Patterns: " << pattcount;
+					cout << endl << endl;
+				}
+				combo(arr[n],trstr[n],it[n]);
+				bool o = checktrans(q,n);
+				if(o && n+1<MAXGEN)
+				{
+					arr[n+1]=q;
+					n+=1;
+					goto outside;
+				}
+				if (it[n]<b[n])
+				{
+					it[n]+=1;
+				}
+			}
+			n--;
+			if(n<0)
+			{
+				break;
+			}
+			if (it[n]<b[n])
+			{
+				it[n]+=1;
+				goto inside;
+			}
+		}	
+		#endif
+	}
+	#ifdef NORECURSE
+	delete[] arr;
+	#endif
 	outfile.close();
 	cout << endl << endl;
 	cout << "time: " << chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - t1).count() << " seconds, patterns: " << pattcount << ", inc: " << inc << endl;
