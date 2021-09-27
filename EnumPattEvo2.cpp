@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <fstream>
 #include <string>
 #include <ctime>
@@ -7,13 +8,15 @@
 #include <array>
 #include <getopt.h>
 
-#define POP (next.p<1000)
+#define PRUNE (next.p>1000)
+#define SPECIAL_RESULT (1==2)
 #define MAXX 20
 #define MAXY 20
-#define MAXGEN 600
+#define MAXGEN 1000
 #define MINGEN 1
 
 //Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash.
+//Don't use for now
 //#define NORECURSE
 
 using namespace std;
@@ -542,7 +545,7 @@ struct mainarr
 						{
 							if (i<mx) mx = i;
 							if (j<my) my = j;
-							if (j>by) by = j;
+							if (ny+1-j<my) my = ny+1-j;
 							//a=(i!=nx+1-i);
 							if(i!=nx+1-i) 
 							{
@@ -558,6 +561,9 @@ struct mainarr
 						}
 					}
 				}
+				by=ny+1-my;
+				bx=nx-mx+1;
+				break;
 			}
 			case 0:
 			{
@@ -600,8 +606,10 @@ struct mainarr
 				break;
 			}
 		}
+		
 		bx-=mx-1;
 		by-=my-1;
+		//cout<<"bx:"<<bx<<",by:"<<by<<endl;
 		if (mx==MAXX+4)
 		{
 			z[0][2] = MAXX+4;
@@ -648,7 +656,7 @@ struct mainarr
 mainarr arr[MAXGEN];
 #endif
 #ifdef NORECURSE
-mainarr* arr = new mainarr[MAXGEN];
+mainarr* arr = nullptr;
 #endif
 mainarr q;
 int xdis=100000;
@@ -663,6 +671,7 @@ bool moveflag=0;
 bool explodeflag=1;
 bool evolveflag=0;
 bool emptyflag=0;
+bool s5flag=0;
 __int128 totrules=0;
 int b1efrontend=0;
 int b2afrontend=0;
@@ -670,11 +679,7 @@ int b1e2cfrontend=0;
 int b2a2cfrontend=0;
 int b2a3ifrontend=0;
 int commonconst=0;
-
-bool compareclist(mainarr& i,mainarr& j)
-{
-	return (i.clist == j.clist);
-}
+vector<array<int,4>> speeds(0);
 
 array<array<int,MAXY+3>,MAXX+3> RLEtocelllist(string RLE)
 {
@@ -682,7 +687,7 @@ array<array<int,MAXY+3>,MAXX+3> RLEtocelllist(string RLE)
 	int mx=MAXX+4,my=MAXY+4;
 	array<array<int,MAXY+3>,MAXX+3> tmp = {0};
 	int cx=1,cy=1, currn = -1;
-	for(int i=0;i<RLE.size();i++)
+	for(unsigned int i=0;i<RLE.size();i++)
 	{
 		if (RLE[i]>47 && RLE[i]<58)
 		{
@@ -788,6 +793,229 @@ void printint128(__int128 n)
 	cout << s;
 }
 
+template<typename T>
+string clisttoRLE(T& inparr, int nx, int ny)
+{
+	string RLE;
+	int runningo=0,runningb=0,runningd=0;
+	for(int j=1;j<ny+1;j++)
+	{
+		for(int i=1;i<nx+1;i++)
+		{
+			if(inparr[i][j]==1)
+			{
+				runningo++;
+				if(runningd)
+				{
+					if(runningd>1)
+						RLE+=to_string(runningd);
+					RLE+="$";
+					runningd=0;
+				}
+				if(runningb)
+				{
+					if(runningb>1)
+						RLE+=to_string(runningb);
+					RLE+="b";
+					runningb=0;
+				}
+			}
+			if(inparr[i][j]==0)
+			{
+				runningb++;
+				if(runningo)
+				{
+					if(runningo>1)
+						RLE+=to_string(runningo);
+					RLE+="o";
+					runningo=0;
+				}
+			}
+		}
+		if(runningo)
+		{
+			if(runningo>1)
+				RLE+=to_string(runningo);
+			RLE+="o";
+			runningo=0;
+		}
+		runningb=0;
+		runningd++;
+		
+	}
+	if(runningo)
+	{
+		if(runningo>1)
+			RLE+=to_string(runningo);
+		RLE+="o";
+		runningo=0;
+	}
+	if(runningb)
+	{
+		if(runningb<nx+1)
+		{
+			if(runningb>1)
+				RLE+=to_string(runningb);
+			RLE+="b";
+		}
+		runningb=0;
+	}
+	RLE+="!";
+	return RLE;
+}
+
+void canonize(mainarr& inparr,array<array<int,MAXY+3>,MAXX+3>& outclist,int flip)
+{
+	switch(flip)
+	{
+		case 0:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[i][j]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 1:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.nx+1-i][j]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 2:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[i][inparr.ny+1-j]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 3:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.nx+1-i][inparr.ny+1-j]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		#if MAXX==MAXY
+		case 4:
+		{
+
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[j][i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 5:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[j][inparr.nx-i+1]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 6:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.ny-j+1][i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 7:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.ny+1-j][inparr.nx+1-i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		#endif
+	}
+}
+
+#if MAXX!=MAXY
+void canonize(mainarr& inparr,array<array<int,MAXX+3>,MAXY+3>& outclist,int flip)
+{
+	switch(flip)
+	{
+		case 4:
+		{
+
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[j][i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 5:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[j][inparr.nx-i+1]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 6:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.ny-j+1][i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+		case 7:
+		{
+			for(int j=1;j<inparr.ny+1;j++)
+			{
+				for(int i=1;i<inparr.nx+1;i++)
+				{
+					if(inparr.clist[i][j]) outclist[inparr.ny+1-j][inparr.nx+1-i]=inparr.clist[i][j];
+				}
+			}
+			break;
+		}
+	}
+}
+#endif
+
 void combo(mainarr& curr, array<int,103>& tlist, __int128 index)
 {
 	q.clist = {0};
@@ -813,6 +1041,63 @@ void combo(mainarr& curr, array<int,103>& tlist, __int128 index)
 	q.clist[0][0] = 0,q.clist[0][1] = 0;
 	q.clist[0][2] = 0,q.clist[1][0] = 0;
 	q.clist[2][0] = 0;
+}
+
+bool compareclist(mainarr& i,mainarr& j)
+{
+	if(i.p!=j.p) return 0;
+	if(i.nx!=j.nx) return 0;
+	if(i.ny!=j.ny) return 0;
+	return (i.clist == j.clist);
+}
+
+bool compareclist(mainarr& comparr,string j,int minx=0, int miny=0, int maxx=0, int maxy=0)
+{
+	if(maxx==0||maxx>comparr.nx-1) maxx = comparr.nx-1;
+	if(maxy==0||maxy>comparr.ny-1) maxy = comparr.ny-1;
+	if(minx<0) minx=0;
+	if(miny<0) miny=0;
+	array<array<int,MAXY+3>,MAXX+3> comp = RLEtocelllist(j);
+	if(comp[2][0]==0)
+	{
+		if(comparr.p==0) return 1;
+		return 0;
+	}
+	if(maxx<=minx||maxy<=miny) return 0;
+	comp[0][0]=0;
+	comp[0][1]=0;
+	comp[2][0]=0;
+	if(minx==0&&miny==0&&maxx==comparr.nx-1&&maxy==comparr.ny-1) return (comparr.clist == comp);
+	array<array<int,MAXY+3>,MAXX+3> newi={0};
+	int tx=0,ty=0;
+	for(int i=minx+1;i<maxx+2&&tx==0;i++)
+	{
+		for(int j=miny+1;j<maxy+2&&tx==0;j++)
+		{
+			if(comparr.clist[i][j])
+			{
+				tx=i;
+			}
+		}
+	}
+	for(int j=miny+1;j<maxy+2&&ty==0;j++)
+	{
+		for(int i=minx+1;i<maxx+2&&ty==0;i++)
+		{
+			if(comparr.clist[i][j])
+			{
+				ty=j;
+			}
+		}
+	}
+	for(int i=tx;i<maxx+2;i++)
+	{
+		for(int j=ty;j<maxy+2;j++)
+		{
+			if(comparr.clist[i][j]==1) newi[i-tx+1][j-ty+1]=1;
+		}
+	}
+	return (newi == comp);
 }
 
 long long int inc=0;
@@ -861,7 +1146,6 @@ int initsymmetry(mainarr a)
 
 bool symmetrycheck(mainarr& a)
 {
-	int sy=8;
 	bool arc=1,afxc=1,afyc=1,afxyc=1,afxrc=1,afyrc=1;
 	switch(initsymm){
 		case 7: 
@@ -963,7 +1247,7 @@ bool symmetrycheck(mainarr& a)
 
 bool symmetrycheck2(mainarr& a)
 {
-	int s,v;
+	int s,v=-1;
 	bool arc=1,afxc=1,afyc=1,afxyc=1,afxrc=1,afyrc=1;
 	
 	for(int j=1;j<a.ny+1;j++)
@@ -1266,11 +1550,36 @@ bool checktrans(mainarr& next,int n)
 		}
 		return 0;
 	}
+	
 	int w = next.nx;
 	int h = next.ny;
 	if(w>MAXX) return 0;
 	if(h>MAXY) return 0;
-	if(!POP) return 0;
+	if(PRUNE) return 0;
+	
+	if(SPECIAL_RESULT)
+	{
+		outfile << "B";
+		for (int i=0;i<51;i++)
+		{
+			if (next.translist[i]==1) 
+			{
+				outfile << intlookup[i];
+			}
+		}
+		outfile << "/S";
+		for (int i=51;i<102;i++)
+		{
+			if (next.translist[i]==1)
+			{
+				outfile << intlookup[i%51];
+			}
+		}
+		outfile << ": " << n+1 << endl;
+		pattcount++;
+		return 0;
+	}
+	
 	int poss=0;
 	for (int k=0;k<102;k++)
 	{
@@ -1318,29 +1627,104 @@ bool checktrans(mainarr& next,int n)
 				if((endpatt.nx==0 && !emptyflag) && (i==0 || evolveflag) && n-i+1 >= MINGEN)
 				{
  					int popmin=100000;
+					int popminloc=i;
 					for (int k=i;k<n+1;k++)
 					{
-						if (arr[k].p<popmin) popmin=arr[k].p;
-					}
-					
-					outfile << "B";
-					for (int i=0;i<51;i++)
-					{
-						if (next.translist[i]==1) 
+						if (arr[k].p<popmin) 
 						{
-							outfile << intlookup[i];
+							popmin=arr[k].p;
+							if(s5flag)
+								popminloc=k;
 						}
 					}
-					outfile << "/S";
-					for (int i=51;i<102;i++)
+					if(!s5flag)
 					{
-						if (next.translist[i]==1)
+						outfile << "B";
+						for (int i=0;i<51;i++)
 						{
-							outfile << intlookup[i%51];
+							if (next.translist[i]==1) 
+							{
+								outfile << intlookup[i];
+							}
+						}
+						outfile << "/S";
+						for (int i=51;i<102;i++)
+						{
+							if (next.translist[i]==1)
+							{
+								outfile << intlookup[i%51];
+							}
+						}
+						outfile << ": (" << next.tx-arr[i].tx << "," << next.ty-arr[i].ty << ")/" << n-i+1 << ", Minpop:" << popmin << ", 2^"<< poss << endl;
+						pattcount++;
+					}
+					else
+					{
+						int x1=next.tx-arr[i].tx,y1=next.ty-arr[i].ty,flip=0;
+						if(x1<0)
+							flip++;
+						if(y1<0)
+							flip+=2;
+						if(abs(x1)<abs(y1))
+							flip+=4;
+						bool flg=1;
+						for(int k=0;k<speeds.size();k++)
+						{
+							// for(auto s:speeds[k])
+								// cout<<s<<",";
+							// cout<<endl;
+							if(speeds[k][0]==(flip/4?abs(y1):abs(x1)) && speeds[k][1]==(flip/4?abs(x1):abs(y1)) && speeds[k][2]==n-i+1)
+							{
+								if(popmin>=speeds[k][3])
+									flg=0;
+								else
+									speeds.erase(speeds.begin()+k);
+								
+							}
+						}
+						//cout<<"ttttttt"<<endl;
+						if(flg)
+						{
+							speeds.push_back({flip/4?abs(y1):abs(x1),flip/4?abs(x1):abs(y1),n-i+1,popmin});
+							int nx,ny;
+							array<array<int,MAXX+3>,MAXY+3> tmp={0};
+							array<array<int,MAXY+3>,MAXX+3> tmp2={0};
+							if(flip/4)
+							{
+								canonize(arr[popminloc],tmp,flip);
+								ny=arr[popminloc].nx;
+								nx=arr[popminloc].ny;
+							}
+							else
+							{
+								canonize(arr[popminloc],tmp2,flip);
+								nx=arr[popminloc].nx;
+								ny=arr[popminloc].ny;
+							}
+							outfile << popmin << ", ";
+							outfile << "B";
+							for (int i=0;i<51;i++)
+							{
+								if (next.translist[i]==1) 
+								{
+									outfile << intlookup[i];
+								}
+							}
+							outfile << "/S";
+							for (int i=51;i<102;i++)
+							{
+								if (next.translist[i]==1)
+								{
+									outfile << intlookup[i%51];
+								}
+							}
+							if(flip/4)
+								outfile<<", "<<(flip/4?abs(y1):abs(x1))<<", "<<(flip/4?abs(x1):abs(y1))<<", "<<n-i+1<<", "<<clisttoRLE(tmp,nx,ny)<<endl;
+							else
+								outfile<<", "<<(flip/4?abs(y1):abs(x1))<<", "<<(flip/4?abs(x1):abs(y1))<<", "<<n-i+1<<", "<<clisttoRLE(tmp2,nx,ny)<<endl;
+							pattcount++;
 						}
 					}
-					outfile << ": (" << next.tx-arr[i].tx << "," << next.ty-arr[i].ty << ")/" << n-i+1 << ", Minpop:" << popmin << ", 2^"<< poss << endl;
-					pattcount++;
 				}
 				return 0;
 			}
@@ -1348,7 +1732,7 @@ bool checktrans(mainarr& next,int n)
 		}
 		else return 0;
 	}
-	//if(!POP) return 0;
+	//if(PRUNE) return 0;
 	return 1;
 }
 
@@ -1393,7 +1777,7 @@ int lookup2[234]={0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,3,4,5,6,7,
 
 void macbipartial (string partial)
 {
-	int bs, numflag, minusflag;
+	int bs=-1, numflag=0, minusflag=0;
 	
 	int bst[18]={0};
 	
@@ -1441,10 +1825,10 @@ void macbipartial (string partial)
 
 int main(int argc, char **argv)
 {
+	#ifdef NORECURSE
+	mainarr* arr = new mainarr[MAXGEN];
+	#endif
 	chrono::steady_clock::time_point t1=chrono::steady_clock::now();
-	// ofstream outfile2;
-	// outfile2.open("supertesttree.txt");
-	// outfile2.close();
 	
 	int z, outflag=0,minmaxflag=0;
 	string file;
@@ -1464,16 +1848,18 @@ int main(int argc, char **argv)
 		{"pattern", 1,0,'p'},
 		{"num", 1,0,'n'},
 		{"evo", 1,0,'e'},
-		{"no_exp", 1,0,'z'},
+		{"no_exp", 0,0,'z'},
 		{"comm", 1,0,'c'},
 		{"xtrans", 1,0,'x'},
 		{"ytrans", 1,0,'y'},
-		{"infile", 1,0,'i'}
+		{"infile", 1,0,'i'},
+		{"move",0,0,'m'},
+		{"5s",0,0,'a'},
 	};
 	
 	int option_index=0;
 	
-	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:mi:",long_options,&option_index))!=-1)
+	while ((z=getopt_long(argc,argv,":o:p:t:r:q:s:h:x:y:n:f:ezc:mi:a",long_options,&option_index))!=-1)
 	{
 		switch(z)
 		{
@@ -1492,7 +1878,7 @@ int main(int argc, char **argv)
 			case 't':
 			{
 				endpatt.clist = RLEtocelllist(optarg);
-				endpatt.nx=endpatt.clist[0][0],endpatt.ny=endpatt.clist[0][1];
+				endpatt.nx=endpatt.clist[0][0],endpatt.ny=endpatt.clist[0][1],endpatt.p=endpatt.clist[2][0];
 				if(endpatt.nx==0) emptyflag=1;
 				endpatt.clist[0][0]=0,endpatt.clist[0][1]=0,endpatt.clist[2][0]=0;
 				break;
@@ -1701,6 +2087,12 @@ int main(int argc, char **argv)
 					exit(0);
 				}
 				
+				if(ts=="5s")
+				{
+					cout << "Takes no arguments. Puts EPE in 5S mode."<< endl;
+					exit(0);
+				}
+				
 				cout << "Command not found." << endl;
 				exit(0);
 
@@ -1757,7 +2149,7 @@ int main(int argc, char **argv)
 				}
 				string strbuff;
 				getline(infile,strbuff);
-				int k=0, bs, numflag, minusflag, prevnum;
+				int k=0, bs=-1, numflag=-1, minusflag=-1, prevnum=-1;
 				bs=0; prevnum=0;
 				mainarr incoming={0};
 				for (char c:strbuff)
@@ -1850,6 +2242,13 @@ int main(int argc, char **argv)
 				break;
 			}
 			
+			case 'a':
+			{
+				moveflag=1;
+				s5flag=1;
+				break;
+			}
+			
 			case ':':
 			{
 				if (optopt=='h')
@@ -1860,7 +2259,7 @@ int main(int argc, char **argv)
 					<< "-p is for setting the pattern, use a headerless RLE for this in quotes, i.e. -p '3o$bo$5bo'.\n\n"
 					<< "-f or --file is for setting the output file of the results.\n\n"
 					<< "-t or --target is for setting an optional target pattern that is not the original set pattern, in\n"
-				    << "the same format as -p.\n\n"
+				    <<"the same format as -p.\n\n"
 					<< "-r or --prule is for setting rulerange with Macbi partial rule format. Do not use with -q or -s.\n\n"
 					<< "-q or --min is for setting rulerange minrule. Do not use with -r.\n\n"
 					<< "-s or --max is for setting rulerange maxrule. Do not use with -r.\n\n"
@@ -1875,6 +2274,7 @@ int main(int argc, char **argv)
 					<< "-m or --move is for turning on checking if the pattern moves from its intitial position.\n\n"
 					<< "-i or --infile is for specifying an RLE (in Golly format, without comments), and a generation count\n"
 					<<"to match the given pattern in the given rule. See -h i for more details\n\n"
+					<< "--5s to go into 5s mode.\n\n"
 					<< "There are 5 other constants to change at the top of the file, which set population bounds, maximum\n"
 					<<"horizontal bounding box, maximum vertical bounding box, maximum generation depth, and minimum\n"
 					<<"generation depth to report, respectively.\n"
@@ -1887,7 +2287,7 @@ int main(int argc, char **argv)
 	
 	if(minmaxflag)
 	{
-		int k=0, bs, numflag, minusflag, prevnum;
+		int k=0, bs=-1, numflag=1, minusflag=-1, prevnum=-1;
 		int minl[102]={0};
 		int maxl[102]={0};
 		for (char c:minrule)
@@ -2045,6 +2445,7 @@ int main(int argc, char **argv)
 	}
 	cout << "initsymm: " << initsymm << endl << endl;
 	outfile.open(file,ios_base::app);
+	if(s5flag) outfile<<"#";
 	outfile << RLE << endl << endl;
 	//cout << nflag << endl;
 	b1efrontend=checkfrontend(arr[0],1);
@@ -2071,7 +2472,7 @@ int main(int argc, char **argv)
 		branch(0);
 		#endif
 		#ifdef NORECURSE
-		int initi=1;
+		//int initi=1;
 		array<int,103> trstr[MAXGEN];
 		__int128 b[MAXGEN]={0};
 		__int128 it[MAXGEN]={0};
