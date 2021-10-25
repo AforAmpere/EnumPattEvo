@@ -11,13 +11,13 @@
 
 #define PRUNE (next.p>10000)
 #define SPECIAL_RESULT (1==2)
-#define MAXX 15
-#define MAXY 11
-#define MAXGEN 15
+#define MAXX 5
+#define MAXY 5
+#define MAXGEN 2000
 #define MINGEN 1
 
 //Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash if you don't have the RAM.
-#define NORECURSE
+//#define NORECURSE
 
 using namespace std;
 
