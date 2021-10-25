@@ -9,8 +9,8 @@
 #include <getopt.h>
 #include <cmath>
 
-#define PRUNE (next.p>10000||compareclist(arr[0],next))
-#define SPECIAL_RESULT (compareclist(next,"o!"))
+#define PRUNE (next.p>10000)
+#define SPECIAL_RESULT (1==2)
 #define MAXX 15
 #define MAXY 11
 #define MAXGEN 15
