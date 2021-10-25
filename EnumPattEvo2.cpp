@@ -9,11 +9,11 @@
 #include <getopt.h>
 #include <cmath>
 
-#define PRUNE (next.p>10000)
-#define SPECIAL_RESULT (1==2)
-#define MAXX 5
-#define MAXY 5
-#define MAXGEN 2003
+#define PRUNE (next.p>10000||compareclist(arr[0],next))
+#define SPECIAL_RESULT (compareclist(next,"o!"))
+#define MAXX 15
+#define MAXY 11
+#define MAXGEN 15
 #define MINGEN 1
 
 //Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash if you don't have the RAM.
@@ -1099,7 +1099,7 @@ bool compareclist(mainarr& comparr,string j,int minx=0, int miny=0, int maxx=0, 
 		}
 		return 1;
 	}
-	if(maxx<=minx||maxy<=miny) return 0;
+	if(maxx<minx||maxy<miny) return 0;
 	comp[0][0]=0;
 	comp[0][1]=0;
 	comp[2][0]=0;
