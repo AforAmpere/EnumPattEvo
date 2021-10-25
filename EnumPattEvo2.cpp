@@ -2269,7 +2269,7 @@ int main(int argc, char **argv)
 							for (int i=0;i<13;i++) incoming.translist[lookup2[117*bs+13*numflag+i]]=1;
 						}
 						numflag=c-48;
-						if (k==strbuff.length()-1)
+						if (k==strbuff.length()-2)
 						{
 							for (int i=0;i<13;i++) incoming.translist[lookup2[117*bs+13*numflag+i]]=1;
 						}
