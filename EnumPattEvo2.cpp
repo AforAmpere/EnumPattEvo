@@ -1283,7 +1283,7 @@ bool symmetrycheck(mainarr& a)
 
 bool symmetrycheck2(mainarr& a)
 {
-	int s,v=-1;
+	int s=-1,v=0;
 	bool arc=1,afxc=1,afyc=1,afxyc=1,afxrc=1,afyrc=1;
 	
 	for(int j=1;j<a.ny+1;j++)
