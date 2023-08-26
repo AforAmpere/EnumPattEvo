@@ -13,11 +13,11 @@
 #define SPECIAL_RESULT (1==2)
 #define MAXX 5
 #define MAXY 5
-#define MAXGEN 2000
+#define MAXGEN 20000
 #define MINGEN 1
 
 //Define to allow basically infinite generation depth with a slight speed sacrifice, unless the bounding box is huge, where it may still crash if you don't have the RAM.
-//#define NORECURSE
+#define NORECURSE
 
 using namespace std;
 
@@ -248,7 +248,7 @@ struct mainarr
 			}
 		}
 		arrout[102]=tr;
-		//sort(arrout.begin(),arrout.begin()+tr);
+		sort(arrout.begin(),arrout.begin()+tr);
 		return arrout;
 	}
 	
@@ -378,10 +378,6 @@ struct mainarr
 								tmp[i][j]=1;
 								p+=1;
 							}
-							// tmp[i][j]=1;
-							// tmp[nx+1-i][j]=1;
-							// tmp[nx+1-i][ny+1-j]=1;
-							// tmp[i][ny+1-j]=1;
 						}
 					}
 				}
@@ -409,6 +405,8 @@ struct mainarr
 				}
 				if(nx%2==1&&t[trarr[(nx+1)/2][(ny+1)/2]]==1)
 				{
+					if ((nx+1)/2<mx) mx = (nx+1)/2;
+					if ((ny+1)/2<my) my = (ny+1)/2;
 					tmp[(nx+1)/2][(ny+1)/2]=1;
 					p+=1;
 				}
@@ -1049,7 +1047,7 @@ void combo(mainarr& curr, array<int,103>& tlist, __int128 index)
 	const int y = tlist[102];
 	int binlist[y];
 	//mainarr next;
-	for(int i = y-1;i>=0;i--)
+	for(int i = 0;i<y;i++)
 	{
 		binlist[i] = index%2;
 		index >>= 1;
@@ -1149,12 +1147,12 @@ int initsymmetry(mainarr a)
 		for(int i=1;i<a.nx+1;i++)
 		{
 			cout << a.clist[i][j] << " " ;
-			if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+			if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-			if (a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-			if (a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+			if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+			if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
 		}
 		cout << endl;
 	}
@@ -1194,7 +1192,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int j=i;j<a.ny+1-i;j++)
 				{
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) return 1;
+					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][i]) return 1;
 				}
 			}
 			return 0;
@@ -1206,7 +1204,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (a.clist[i][j]!=a.clist[j][i]) return 1;
+					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) return 1;
 				}
 			}
 			return 0;
@@ -1217,7 +1215,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (a.clist[i][j]!=a.clist[j][i]) return 1;
+					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) return 1;
 				}
 			}
 			return 0;
@@ -1252,9 +1250,9 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<a.nx+1;i++)
 				{
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
-					if (a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
 				}
 			}
 			if(!arc&!afxc&!afxrc) return 1;
@@ -1266,12 +1264,12 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<a.nx+1;i++)
 				{
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 					if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-					if (a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-					if (a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+					if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
 				}
 			}
 			
@@ -1290,12 +1288,12 @@ bool symmetrycheck2(mainarr& a)
 	{
 		for(int i=1;i<a.nx+1;i++)
 		{
-			if (a.clist[i][j]!=a.clist[a.ny-j+1][i]) arc=0;
+			if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-			if (a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-			if (a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+			if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+			if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
 		}
 	}
 	while(1)
@@ -1589,8 +1587,14 @@ bool checktrans(mainarr& next,int n)
 	
 	int w = next.nx;
 	int h = next.ny;
-	if(w>MAXX) return 0;
-	if(h>MAXY) return 0;
+	if(w>MAXX) 
+	{
+		return 0;
+	}
+	if(h>MAXY)
+	{
+		return 0;
+	}
 	if(PRUNE) return 0;
 	
 	if(SPECIAL_RESULT)
@@ -1622,7 +1626,10 @@ bool checktrans(mainarr& next,int n)
 		if (next.translist[k]==2) poss++;
 	}
 	if (poss<commonconst) return 0;
-	if(explodeflag&&!checkfrontend(next,0)) return 0;
+	if(explodeflag&&!checkfrontend(next,0)) 
+	{
+		return 0;
+	}
 	if(explodeflag&& endpatt.nx==0 && (next.translist[2]==1 && next.translist[6]==1)) return 0;
 	if(endpatt.nx!=0 && !symmetrycheck2(next)) return 0;
 	if (endpatt.nx!=0 && compareclist(next,endpatt) && n+1 >= MINGEN)
@@ -1718,7 +1725,6 @@ bool checktrans(mainarr& next,int n)
 								
 							}
 						}
-						//cout<<"ttttttt"<<endl;
 						if(flg)
 						{
 							speeds.push_back({flip/4?abs(y1):abs(x1),flip/4?abs(x1):abs(y1),n-i+1,popmin});
@@ -1814,6 +1820,7 @@ void branch(int n)
 	}
 	
 	array<int,103> trstr = arr[n].totrans();
+	
 	__int128 b = intpow(trstr[102]);
 	for(__int128 i=0;i<b &&!(nflag>0 && pattcount>=nflag);i++)
 	{
@@ -1829,7 +1836,7 @@ void branch(int n)
 		if(n>=s)
 			inc++;
 		postotalindex[n][0]=i;postotalindex[n][1]=b;
-		if(inc%5000000==0&&inc)
+		if(inc%5000000==0)
 		{
 			if(backuploc!="")
 				save(n);
@@ -2256,13 +2263,19 @@ int main(int argc, char **argv)
 				}
 				string strbuff;
 				getline(infile,strbuff);
+				strbuff+=" ";
+				//cout<<strbuff<<endl;
 				int k=0, bs=-1, numflag=-1, minusflag=-1, prevnum=-1;
 				bs=0; prevnum=0;
-				mainarr incoming={0};
+				mainarr incoming;
+				for(int i=0;i<102;i++)
+				{
+					incoming.translist[i]=0;
+				}
 				for (char c:strbuff)
 				{
 					if (c=='S' || c=='s') {bs=1; prevnum=0;}
-					if (c>46 && c<58) 
+					if (c>46 && c<58 || c==' ') 
 					{
 						if(prevnum)
 						{
@@ -2305,6 +2318,18 @@ int main(int argc, char **argv)
 					k++;
 				}
 				incoming.translist[0]=0;
+				
+				// int zz=0;
+				// for(auto c:incoming.translist)
+				// {
+					// if(c)
+					// {
+						// cout<<(zz/51?"s":"b")<<(intlookup[zz%51])<<",";
+					// }
+					// zz++;
+				// }
+				// cout<<endl;
+				
 				string rlebuff;
 				while(infile>>buff)
 				{
@@ -2344,6 +2369,8 @@ int main(int argc, char **argv)
 					incoming.clist[2][0] = 0;
 					run--;
 				}
+				//for(int q:incoming.translist) cout<< q<<",";
+				//cout<<endl;
 				initsymm=8;
 				RLE = rlebuff;
 				break;
