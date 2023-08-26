@@ -1147,12 +1147,12 @@ int initsymmetry(mainarr a)
 		for(int i=1;i<a.nx+1;i++)
 		{
 			cout << a.clist[i][j] << " " ;
-			if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
+			if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && i<a.ny+1)?a.clist.at(a.ny-j+1)[i]:0)) arc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-			if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-			if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+			if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) afxrc=0;
+			if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1)?a.clist[a.ny-j+1][a.nx-i+1]:0)) afyrc=0;
 		}
 		cout << endl;
 	}
@@ -1192,7 +1192,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int j=i;j<a.ny+1-i;j++)
 				{
-					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][i]) return 1;
+					if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && i<a.ny+1)?a.clist.at(a.ny-j+1)[i]:0)) return 1;
 				}
 			}
 			return 0;
@@ -1204,7 +1204,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) return 1;
+					if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) return 1;
 				}
 			}
 			return 0;
@@ -1215,7 +1215,7 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<(a.nx+3)/2;i++)
 				{
-					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) return 1;
+					if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) return 1;
 				}
 			}
 			return 0;
@@ -1250,9 +1250,9 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<a.nx+1;i++)
 				{
-					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
+					if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && i<a.ny+1)?a.clist.at(a.ny-j+1)[i]:0)) arc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
-					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
+					if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) afxrc=0;
 				}
 			}
 			if(!arc&!afxc&!afxrc) return 1;
@@ -1264,12 +1264,12 @@ bool symmetrycheck(mainarr& a)
 			{
 				for(int i=1;i<a.nx+1;i++)
 				{
-					if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
+					if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && i<a.ny+1)?a.clist.at(a.ny-j+1)[i]:0)) arc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 					if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 					if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-					if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-					if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+					if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) afxrc=0;
+					if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1)?a.clist[a.ny-j+1][a.nx-i+1]:0)) afyrc=0;
 				}
 			}
 			
@@ -1288,12 +1288,12 @@ bool symmetrycheck2(mainarr& a)
 	{
 		for(int i=1;i<a.nx+1;i++)
 		{
-			if (a.ny-j+1<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist.at(a.ny-j+1)[i]) arc=0;
+			if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && i<a.ny+1)?a.clist.at(a.ny-j+1)[i]:0)) arc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][j]) afxc=0;
 			if (a.clist[i][j]!=a.clist[i][a.ny-j+1]) afyc=0;
 			if (a.clist[i][j]!=a.clist[a.nx-i+1][a.ny-j+1]) afxyc=0;
-			if (j<a.nx+1 && i<a.ny+1 && a.clist[i][j]!=a.clist[j][i]) afxrc=0;
-			if (a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1 && a.clist[i][j]!=a.clist[a.ny-j+1][a.nx-i+1]) afyrc=0;
+			if (a.clist[i][j]!=((j<a.nx+1 && i<a.ny+1)?a.clist[j][i]:0)) afxrc=0;
+			if (a.clist[i][j]!=((a.ny-j+1<a.nx+1 && a.nx-i+1<a.ny+1)?a.clist[a.ny-j+1][a.nx-i+1]:0)) afyrc=0;
 		}
 	}
 	while(1)
