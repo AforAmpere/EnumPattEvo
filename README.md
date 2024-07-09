@@ -1,20 +1,44 @@
 # EnumPattEvo
-Enumerates (given time) all stable patterns with set parameters whose evolutions contain a given starting pattern in Isotropic Non-totalistic Cellular Automata
 
-# Purpose and what program to choose
-This program is for exploring the Isotropic Non-Totalistic (INT) rulespace in Cellular Automata, by finding rules where a given pattern follows behavior set by the user. This can be used to find spaceships, oscillators, and many other objects with sufficient constraints of the search space. 
+A program for finding rules in cellular automata where starting patterns evolve in specified ways
 
-# Constants
-There are 6 constants at the top of the program in the .cpp files, MAXPOP, MINPOP, MAXX, MAXY, MAXGEN, and MINGEN.
-MAXPOP is the maximum population you want the pattern to be able to attain.
-MINPOP is the minimum population you want the pattern to be able to attain.
-MAXX is the maximum bounding box size the pattern can reach horizontally.
-MAXY is the maximum bounding box size the pattern can reach vertically.
-MAXGEN is the maximum generation depth to search. For oscillators and spaceships, this is the maximum period.
-MINGEN is the minimum reported generation depth a pattern can have.
+## What EPE Does
 
-# Compilation
-To compile, do g++ (Chosen .cpp file) -o (Preferred Executable Name) -O3
+EPE is designed for taking an initial pattern and finding all examples (given enough time) of whatever constraints are set. For instance, finding all rules in some rulespace where a pattern is an oscillator or a spaceship. EPE aims to complete those searches with the minimal amount of searching to guarantee complete coverage.
 
-# Usage 
-For now, use EnumPattEvo2.cpp, at least until the first is updated to be somewhat comparable in usefulness. For general usage of the parameters, use -h for help, using -h with an argument gives you more information on it.
+## How it Works
+
+EPE does a depth-first search across the rulespace it is given in an attempt to find the rules that meet the search criteria. Each node of the tree corresponds to an increase in one generation from the parent node. The branches from a given node correspond to all of the ways to set the new transitions that have previously been undetermined during the evolution that now must be determined to move forward. In INT, this leads to a branching ratio at a node of 2^t, where t is the number of currently relevant transitions that were previously undetermined. Searching in this manner is vastly more effective in many cases than simply trying to run each rule in a given rulespace. The exceptions to this are instances with very small rulespaces (a few million rules or less), or rulespaces with an overwhelming number of valid results contained in them.
+
+There are a significant amount of branch pruning options that EPE uses to try and narrow down searches to reasonable lengths. For instance, confining the pattern to always be contained within an n-by-m box, or stabilize in some finite, relatively small number of generations are both effective at speeding up searches. The most effective usage of EPE is done through trying to find the most confined search that will also likely give results. Too confined, and many of the results may be pruned off. Too open, and the search may take an extraordinary amount of time (potentially millions of years).
+
+## Getting Started
+
+Once you've cloned the repository, choose a rulespace from one of those seen in the Makefile, and do `make {rulespace}`. Out of the currently supported rulespaces, HROT is unique in that you can specify range={n} to the make command to specify the range of the neighborhood. Otherwise, it defaults to range 5. Each time you switch rulespaces, you need to recompile, which should only take a few seconds. Alternatively, you can change the output targets for the compilation to different executable names.
+
+If compilation fails, make sure you have make installed, and g++. If there are still issues, please let me know.
+
+## Searching
+
+Many of the commands available to use are documented in EPE itself, seen by doing `./EPE -h` to list the available ones, or `./EPE -h {list of commands}` to give information on the ones you specify as input.
+
+To perform searching, you need to figure out what you want to look for specifically. There are many possible things to look for, so EPE tres to be very general purpose in terms of rule-finding
+
+### Example
+
+Goal: Find all oscillators in INT that start with obo! and fit within a 5x5 box.
+
+Command: `./EPE -p 'obo!' -b 5 5 -g 10000'`
+
+Output:
+```dims: 3,1
+1 0 1
+
+time: 0.170162 seconds
+Solutions found: 527
+Branches traversed: 895964
+```
+
+## Custom Pruning and Result Conditions
+
+SECTION TO BE ADDED

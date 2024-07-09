@@ -1,0 +1,5 @@
+Improve evolve by determining symmetry during evolution
+Improve multiple pattern searching with better pruning techniques
+Non hypercuboidal rulespaces
+
+FIX multiple pattern -e
