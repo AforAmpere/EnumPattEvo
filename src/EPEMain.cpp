@@ -422,6 +422,7 @@ void print_progress(int currentdepth)
     }
     if(onecount) cout<<"[0/1]"<<(onecount>1?"*"+to_string(onecount):"");
     cout<<endl;
+    //cout<<totalarray[0][currentdepth+1]<<endl;
     cout<<"Solutions: "<<solutioncount<<endl;
     cout<<"Branches: "<<totalbranches<<endl<<endl;
 }
@@ -533,9 +534,9 @@ void branch(int currentdepth)
 
         progressdenom[currentdepth]=newbranchcount;
         //Loop over all branches
-        if(OptionState::startingbranchoffset.size()<currentdepth+1) loading=false;
         progressnumer[currentdepth]=0;
         if(loading) progressnumer[currentdepth]=(__int128)OptionState::startingbranchoffset[currentdepth];
+        if(OptionState::startingbranchoffset.size()<=currentdepth+1) loading=false;
         for(;progressnumer[currentdepth]<progressdenom[currentdepth];progressnumer[currentdepth]++)
         {
             totalbranches++;
