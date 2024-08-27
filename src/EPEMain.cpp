@@ -422,7 +422,6 @@ void print_progress(int currentdepth)
     }
     if(onecount) cout<<"[0/1]"<<(onecount>1?"*"+to_string(onecount):"");
     cout<<endl;
-    //cout<<totalarray[0][currentdepth+1]<<endl;
     cout<<"Solutions: "<<solutioncount<<endl;
     cout<<"Branches: "<<totalbranches<<endl<<endl;
 }
@@ -582,6 +581,10 @@ void branch(int currentdepth)
                 currentdepth++;
                 goto outside;
             }
+            else
+            {
+                loading=false;
+            }
             inside:;
         }
         //Reset rulespace modifications
@@ -643,6 +646,7 @@ int main(int argc, char** argv)
     #endif
 
     rng = default_random_engine {(unsigned int) OptionState::randseed};
+    if(OptionState::startingbranchoffset.size()==0) loading=false;
 
     //Initialize all starting patterns
     for(int i=0;i<pattcount;i++)

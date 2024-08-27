@@ -648,7 +648,24 @@ inline void find_bounds(RulespaceRep& rulespace, CellArray& prevarray, int& low_
 					if(rulespace[prevarray.trans[i][j]][0])
 					{
 						low_y=j;
-						w_y=E_Y()-2*j;
+						i=LORGE;
+						j=LORGE;
+					}
+				}
+			}
+			if(low_y==0) 
+			{
+				w_y=E_Y();
+				return;
+			}
+			for(int j=E_Y()-1;j>=E_Y()-low_y-1;j--)
+			{
+				for(int i=low_x;i<H_X();i++)
+				{
+					if(rulespace[prevarray.trans[i][j]][0])
+					{
+						low_y=min(low_y,E_Y()-j-1);
+						w_y=E_Y()-2*low_y;
 						return;
 					}
 				}
