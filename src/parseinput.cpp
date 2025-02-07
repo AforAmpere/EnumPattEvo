@@ -268,13 +268,25 @@ string input_file(string filename, bool setrule=true)
     {
         if(tsa[j]==1)
         {
-            queue<pair<int,int>>& l = linked(j,0);
+            queue<pair<int,int>>& l = linked(j,-rspac[j][0]);
             pair<int,int> p;
             while(!l.empty())
             {
                 p=l.front();
                 l.pop();
-                tsa[p.first] = 1;
+                if(tsa[p.first]==1)
+                {
+                    if(p.second != -rspac[p.first][0])
+                    {
+                        cout<<"Discrepancy in evolution on transition "<<j<<endl;
+                        exit(1);
+                    }
+                }
+                else
+                {
+                    tsa[p.first] = 1;
+                    rspac[p.first][0]=-p.second;
+                }
             }
         }
     }

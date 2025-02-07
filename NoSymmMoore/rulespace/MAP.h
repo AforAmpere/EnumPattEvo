@@ -1,4 +1,4 @@
-#include "../Rot4ReflMoore.h"
+#include "../NoSymmMoore.h"
 #define MAP_H
 #define TRANSCOUNT 512
 #define STATECOUNT 2

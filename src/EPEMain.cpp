@@ -58,13 +58,14 @@ vector<unsigned long long int> frontend_bits;
 inline bool custom_prune(CellArray& arr, int depth)
 {
     //return ((depth<100||arr.pop<46)&&(depth<60||depth>=100||arr.pop<110-(depth-60)*1));
+    //return (rulespace[13][0]>0 && rulespace[6][0]>0);
     return true;
 }
 
 #ifdef CUSTOMRESULT
 inline bool custom_result(CellArray& arr, int depth)
 {
-    return depth>=10000||arr.dims_x>=100;
+    return depth>=3000||arr.dims_x>=100;
 }
 #endif
 
@@ -77,11 +78,11 @@ inline string result_string(int newdepth)
         if(i<targetcount)
         {
             s<<", "<<mr<<", , , "<<solvedgens[i]<<", ";
-            // #if STATECOUNT==2||defined TWOSTATEOUTPUT
-            // s<<two_state_grid_to_RLE(totalarray[i][0])<<", "<<two_state_grid_to_RLE(targets[i])<<endl;
-            // #else
+            #if STATECOUNT==2||defined TWOSTATEOUTPUT
+            s<<two_state_grid_to_RLE(totalarray[i][0])<<", "<<two_state_grid_to_RLE(targets[i])<<endl;
+            #else
             s<<multi_state_grid_to_RLE(totalarray[i][0])<<", "<<multi_state_grid_to_RLE(targets[i])<<endl;
-            // #endif
+            #endif
         }
         else
         {

@@ -373,7 +373,7 @@ RuleRep minimum_rule(RulespaceRep& rulespace)
         else
         {
             #ifdef LINKED
-            queue<pair<int,int>>& l = linked(i,-rulespace[i][0]);
+            queue<pair<int,int>>& l = linked(i,rulespace[i][1]);
             pair<int,int> p;
             bool anybelow=false;
             while(!l.empty())
@@ -388,7 +388,7 @@ RuleRep minimum_rule(RulespaceRep& rulespace)
             if(!anybelow)
             {
                 out[i]=rulespace[i][1];
-                l= linked(i,-rulespace[i][0]);
+                l= linked(i,rulespace[i][1]);
                 while(!l.empty())
                 {
                     p=l.front();
@@ -414,7 +414,7 @@ string two_state_grid_to_RLE(CellArray& in_arr)
 	{
 		for(int i=RANGE;i<in_arr.dims_x+RANGE;i++)
 		{
-			if(in_arr.cells[i][j]==1)
+			if(in_arr.cells[i][j]>0)
 			{
 				runningo++;
 				if(runningd)

@@ -1,4 +1,4 @@
-#include "../Rot4ReflMoore.h"
+#include "../NoSymmMoore.h"
 #define B0INT_H
 #define TRANSCOUNT 1024
 #define STATECOUNT 3
