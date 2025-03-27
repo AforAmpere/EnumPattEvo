@@ -18,14 +18,20 @@ Once you've cloned the repository, choose a rulespace from one of those seen bel
 
 If compilation fails, make sure you have make installed, and g++. If there are still issues, please let me know.
 
-## Rulespaces Supported
+## Rulespaces Currently Added
 
 INT, Isotropic Non-Totalistic range 1 2-state rules (non-B0)
+
 INTGen, INT Generations rules
+
 B0INT, B0 2-state INT rules
+
 BWSINT, Black-White 2-state symmetric INT rules
+
 HROT, High Range Outer Totalistic rules
+
 MAP, Asymmetric 2-state range 1 rules (non-B0)
+
 B0MAP, B0 MAP rules
 
 ## Searching
