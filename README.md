@@ -14,9 +14,19 @@ There are a significant amount of branch pruning options that EPE uses to try an
 
 ## Getting Started
 
-Once you've cloned the repository, choose a rulespace from one of those seen in the Makefile, and do `make {rulespace}`. Out of the currently supported rulespaces, HROT is unique in that you can specify range={n} to the make command to specify the range of the neighborhood. Otherwise, it defaults to range 5. Each time you switch rulespaces, you need to recompile, which should only take a few seconds. Alternatively, you can change the output targets for the compilation to different executable names.
+Once you've cloned the repository, choose a rulespace from one of those seen below, and do `make {rulespace}`. Out of the currently supported rulespaces, HROT is unique in that you can specify range={n} to the make command to specify the range of the neighborhood. Otherwise, it defaults to range 5. Each time you switch rulespaces, you need to recompile, which should only take a few seconds. Alternatively, you can change the output targets for the compilation to different executable names.
 
 If compilation fails, make sure you have make installed, and g++. If there are still issues, please let me know.
+
+## Rulespaces Supported
+
+INT, Isotropic Non-Totalistic range 1 2-state rules (non-B0)
+INTGen, INT Generations rules
+B0INT, B0 2-state INT rules
+BWSINT, Black-White 2-state symmetric INT rules
+HROT, High Range Outer Totalistic rules
+MAP, Asymmetric 2-state range 1 rules (non-B0)
+B0MAP, B0 MAP rules
 
 ## Searching
 
