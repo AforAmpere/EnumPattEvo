@@ -43,6 +43,8 @@ vector<CellArray> ssssscanonizationarrays;
 
 vector<vector<vector<vector<bool>>>> occupied;
 
+void print_progress(int depth);
+
 string argvstr;
 
 bool loading;
@@ -61,17 +63,17 @@ string custommessage="";
 
 inline bool custom_prune(CellArray& arr, int depth)
 {
-    //return ((depth<100||arr.pop<46)&&(depth<60||depth>=100||arr.pop<110-(depth-60)*1));
-    //return (rulespace[13][0]>0 && rulespace[6][0]>0);
-    //return arr.dims_x>15;
     return true;
 }
 
 #ifdef CUSTOMRESULT
 inline bool custom_result(CellArray& arr, int depth)
 {
-    // custommessage = ""+to_string(depth)+","+to_string(arr.dims_x)+","+to_string(comm)+";";
-    // return depth>=3000||arr.dims_x>=100;
+    if(depth==30)
+    {
+        return true;
+    }
+    return false;
 }
 #endif
 
@@ -98,7 +100,9 @@ inline string result_string(int newdepth)
             int p=totalarray[i][n].period;
             int mpopgen=-1;
             #ifndef CUSTOMRESULT
-            for(int j=n-p;j<n;j++)
+            int y = n-p;
+            while(y%ALTERNATING!=0) y++;
+            for(int j=y;j<n;j+=ALTERNATING)
             {
                 tmp = totalarray[i][j].pop;
                 if(tmp<mpop)
@@ -433,6 +437,8 @@ void print_progress(int currentdepth)
     if(onecount) cout<<"[0/1]"<<(onecount>1?"*"+to_string(onecount):"");
     cout<<endl;
     cout<<"Solutions: "<<solutioncount<<endl;
+    cout<<"Current rule: "<<minimum_rule(rulespace)<<endl;
+    cout<<totalarray[0][currentdepth];
     cout<<"Branches: "<<totalbranches<<endl<<endl;
 }
 

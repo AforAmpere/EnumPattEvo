@@ -6,3 +6,4 @@
 
 #define LINKED 512
 #define TWOSTATEOUTPUT 
+#define ALTERNATING 2

@@ -15,6 +15,9 @@
 
 #define LORGE (1<<23)
 #define SMOLL (-(1<<23))
+#ifndef ALTERNATING
+#define ALTERNATING 1
+#endif
 
 using namespace std;
 

@@ -185,7 +185,7 @@ void evolve(RulespaceRep& rulespace, CellArray& prevarray, CellArray& newarray)
 	if(dims_x==0)
 	{
 		newarray.pop=0;
-		newarray.symm=9;
+		newarray.symm=0;
 		return;
 	}
 	int state=0;

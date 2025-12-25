@@ -6,5 +6,6 @@
 
 #define LINKED 102
 #define TWOSTATEOUTPUT 
+#define ALTERNATING 2
 
 extern const char *trans_name_lookup[51];

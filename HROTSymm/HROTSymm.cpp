@@ -30,26 +30,6 @@ void CellArray::generate_trans_array(RulespaceRep& rulespace, TransSetArray& vis
 		}
 	}
 
-	// for(int j=0;j<E_Y()+RANGE;j++)
-	// {
-	// 	for(int i=0;i<E_X()+RANGE;i++)
-	// 	{
-	// 		cout<<cells[i][j]<<" ";
-	// 	}
-	// 	cout<<endl;
-	// }
-	// cout<<endl;
-
-	// for(int j=0;j<E_Y()+2*RANGE+1;j++)
-	// {
-	// 	for(int i=0;i<E_X()+2*RANGE+1;i++)
-	// 	{
-	// 		cout<<tmpgrid[i][j]<<" ";
-	// 	}
-	// 	cout<<endl;
-	// }
-	// cout<<endl;
-
 	for(int i=E_X()-1;i>=0;i--)
 	{
 		for(int j=E_Y()-1;j>=0;j--)
@@ -63,16 +43,6 @@ void CellArray::generate_trans_array(RulespaceRep& rulespace, TransSetArray& vis
 			}
 		}
 	}
-
-	// for(int j=0;j<E_Y()+RANGE;j++)
-	// {
-	// 	for(int i=0;i<E_X()+RANGE;i++)
-	// 	{
-	// 		cout<<trans[i][j]<<" ";
-	// 	}
-	// 	cout<<endl;
-	// }
-	// cout<<endl;
 }
 
 bool compare_cell_arrays(CellArray& arr1, CellArray& arr2)
