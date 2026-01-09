@@ -315,9 +315,9 @@ string input_file(string filename, bool setrule=true)
 void load_5s(unordered_map<string,int>& table, string folder)
 {
     ifstream diag, ortho, obliq;
-    diag.open(folder+"/"+"Diagonal ships.sss.txt");
-    ortho.open(folder+"/"+"Orthogonal ships.sss.txt");
-    obliq.open(folder+"/"+"Oblique ships.sss.txt");
+    diag.open(folder+"/"+"diagonal.sss");
+    ortho.open(folder+"/"+"orthogonal.sss");
+    obliq.open(folder+"/"+"oblique.sss");
 
     if(!(diag))
     {

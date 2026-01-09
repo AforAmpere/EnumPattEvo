@@ -81,30 +81,30 @@ inline string result_string(int newdepth)
 {
     stringstream s;
     RuleRep mr = minimum_rule(rulespace);
-    for(int i=0;i<pattcount;i++)
+    for(int patt=0;patt<pattcount;patt++)
     {
-        if(i<targetcount)
+        if(patt<targetcount)
         {
-            s<<", "<<mr<<", , , "<<solvedgens[i]<<", ";
+            s<<", "<<mr<<", , , "<<solvedgens[patt]<<", ";
             #if STATECOUNT==2||defined TWOSTATEOUTPUT
-            s<<two_state_grid_to_RLE(totalarray[i][0])<<", "<<two_state_grid_to_RLE(targets[i])<<endl;
+            s<<two_state_grid_to_RLE(totalarray[patt][0])<<", "<<two_state_grid_to_RLE(targets[patt])<<endl;
             #else
-            s<<multi_state_grid_to_RLE(totalarray[i][0])<<", "<<multi_state_grid_to_RLE(targets[i])<<endl;
+            s<<multi_state_grid_to_RLE(totalarray[patt][0])<<", "<<multi_state_grid_to_RLE(targets[patt])<<endl;
             #endif
         }
         else
         {
             int mpop=(LORGE);
             int tmp=0;
-            int n = solvedgens[i];
-            int p=totalarray[i][n].period;
+            int n = solvedgens[patt];
+            int p=totalarray[patt][n].period;
             int mpopgen=-1;
             #ifndef CUSTOMRESULT
             int y = n-p;
             while(y%ALTERNATING!=0) y++;
             for(int j=y;j<n;j+=ALTERNATING)
             {
-                tmp = totalarray[i][j].pop;
+                tmp = totalarray[patt][j].pop;
                 if(tmp<mpop)
                 {
                     mpop=tmp;
@@ -114,21 +114,54 @@ inline string result_string(int newdepth)
             #else
             mpopgen=0;
             #endif
+
+            size_t slidingcompsize=OptionState::slidingcomp.size();
+            size_t staticcompsize=OptionState::staticcomp.size();
+
+            int ax=totalarray[patt][n].disp_x-totalarray[patt][n-p].disp_x;
+            int ay=totalarray[patt][n].disp_y-totalarray[patt][n-p].disp_y;
+            if(slidingcompsize||staticcompsize)
+            {
+                int min_x_1=SMOLL;
+                int min_y_1=SMOLL;
+                int max_x_1=LORGE;
+                int max_y_1=LORGE;
+
+                int min_x_2=SMOLL;
+                int min_y_2=SMOLL;
+                int max_x_2=LORGE;
+                int max_y_2=LORGE;
+
+                //Reminder to make this not a hack at some point
+                if(staticcompsize)
+                {
+                    int offx=-OptionState::staticcompmaskoff[patt].first;
+                    int offy=-OptionState::staticcompmaskoff[patt].second;
+                    find_mask_bounds(totalarray[patt][n], staticcomps[patt], totalarray[patt][n].disp_x+offx, totalarray[patt][n].disp_y+offy, min_x_1, min_y_1, max_x_1, max_y_1);
+                    find_mask_bounds(totalarray[patt][n-p], staticcomps[patt], totalarray[patt][n-p].disp_x+offx, totalarray[patt][n-p].disp_y+offy, min_x_2, min_y_2, max_x_2, max_y_2);
+                }
+                else if(slidingcompsize)
+                {
+                    find_mask_bounds(totalarray[patt][n], slidingcomps[patt], 0, 0, min_x_1, min_y_1, max_x_1, max_y_1);
+                    find_mask_bounds(totalarray[patt][n-p], slidingcomps[patt], 0, 0, min_x_2, min_y_2, max_x_2, max_y_2);
+                }
+                ax=totalarray[patt][n].disp_x+min_x_1-totalarray[patt][n-p].disp_x-min_x_2;
+                ay=totalarray[patt][n].disp_y+min_y_1-totalarray[patt][n-p].disp_y-min_y_2;
+            }
+            
             CellArray* printedarrayp;
             if(OptionState::sssssmode)
             {
-                int ax=totalarray[i][n].disp_x-totalarray[i][n-p].disp_x;
-                int ay=totalarray[i][n].disp_y-totalarray[i][n-p].disp_y;
                 s<<mpop<<", "<<mr<<", "<<canonized_speed(ax,ay,p)<<", ";
-                canonize_array(totalarray[i][mpopgen],ssssscanonizationarrays[i],ax,ay);
-                printedarrayp=&(ssssscanonizationarrays[i]);
+                canonize_array(totalarray[patt][mpopgen],ssssscanonizationarrays[patt],ax,ay);
+                printedarrayp=&(ssssscanonizationarrays[patt]);
             }
             else
             {
                 s<<mpop<<", "<<mr<<", "<<\
-                totalarray[i][n].disp_x-totalarray[i][n-p].disp_x<<", "<<\
-                totalarray[i][n].disp_y-totalarray[i][n-p].disp_y<<", "<<p<<", ";
-                printedarrayp=&(totalarray[i][mpopgen]);
+                ax<<", "<<\
+                ay<<", "<<p<<", ";
+                printedarrayp=&(totalarray[patt][mpopgen]);
             }
             CellArray& printedarray=*printedarrayp;
 
@@ -252,6 +285,9 @@ inline bool check_valid(int newdepth)
         }
     }
 
+    size_t slidingcompsize=OptionState::slidingcomp.size();
+    size_t staticcompsize=OptionState::staticcomp.size();
+
     for(int patt=0;patt<pattcount;patt++)
     {
         if(solvedgens[patt]==-1)
@@ -262,19 +298,24 @@ inline bool check_valid(int newdepth)
                 for(int gen=0;gen<newdepth;gen++)
                 {
                     bool o=true;
-                    if(gen==0 && (OptionState::slidingcomp.size()||OptionState::staticcomp.size()))
+                    if((gen==0 || OptionState::allow_evolve[patt]) && (slidingcompsize||staticcompsize))
                     {
-                        if(OptionState::staticcomp.size())
+                        if(staticcompsize)
                         {
-                            o*=compare_cell_arrays(newarray, totalarray[patt][0], staticcomps[patt], newarray.disp_x-OptionState::staticcompmaskoff[patt].first, newarray.disp_y-OptionState::staticcompmaskoff[patt].second);
+                            o*=compare_cell_arrays(newarray, totalarray[patt][gen], staticcomps[patt], -OptionState::staticcompmaskoff[patt].first, -OptionState::staticcompmaskoff[patt].second);
                         }
-                        if(OptionState::slidingcomp.size())
+                        if(slidingcompsize)
                         {
-                            o*=compare_cell_arrays(newarray, totalarray[patt][0], slidingcomps[patt], 0, 0);
+                            //cout<<gen<<endl;
+                            o*=compare_cell_arrays(newarray, totalarray[patt][gen], slidingcomps[patt], SMOLL, SMOLL);
+                            // if(o)
+                            // {
+                            //     cout<<"hi"<<endl;
+                            // }
                         }
                         if(!o)
                         {
-                            if(compare_cell_arrays(newarray, totalarray[patt][0])) return 0;
+                            if(compare_cell_arrays(newarray, totalarray[patt][gen])) return 0;
                         }
                     }
                     else
@@ -290,8 +331,40 @@ inline bool check_valid(int newdepth)
                         {
                             return 0;
                         }
-                        int adisp_x=newarray.disp_x-totalarray[patt][gen].disp_x;
-                        int adisp_y=newarray.disp_y-totalarray[patt][gen].disp_y; 
+                        int adisp_x,adisp_y;
+                        if(slidingcompsize||staticcompsize)
+                        {
+                            int min_x_1=SMOLL;
+                            int min_y_1=SMOLL;
+                            int max_x_1=LORGE;
+                            int max_y_1=LORGE;
+
+                            int min_x_2=SMOLL;
+                            int min_y_2=SMOLL;
+                            int max_x_2=LORGE;
+                            int max_y_2=LORGE;
+
+                            //Reminder to make this not a hack at some point
+                            if(staticcompsize)
+                            {
+                                int offx=-OptionState::staticcompmaskoff[patt].first;
+                                int offy=-OptionState::staticcompmaskoff[patt].second;
+                                find_mask_bounds(newarray, staticcomps[patt], newarray.disp_x+offx, newarray.disp_y+offy, min_x_1, min_y_1, max_x_1, max_y_1);
+                                find_mask_bounds(totalarray[patt][gen], staticcomps[patt], totalarray[patt][gen].disp_x+offx, totalarray[patt][gen].disp_y+offy, min_x_2, min_y_2, max_x_2, max_y_2);
+                            }
+                            else if(slidingcompsize)
+                            {
+                                find_mask_bounds(newarray, slidingcomps[patt], 0, 0, min_x_1, min_y_1, max_x_1, max_y_1);
+                                find_mask_bounds(totalarray[patt][gen], slidingcomps[patt], 0, 0, min_x_2, min_y_2, max_x_2, max_y_2);
+                            }
+                            adisp_x=newarray.disp_x+min_x_1-totalarray[patt][gen].disp_x-min_x_2;
+                            adisp_y=newarray.disp_y+min_y_1-totalarray[patt][gen].disp_y-min_y_2;
+                        }
+                        else
+                        {
+                            adisp_x=newarray.disp_x-totalarray[patt][gen].disp_x;
+                            adisp_y=newarray.disp_y-totalarray[patt][gen].disp_y; 
+                        }
                         if(OptionState::minperiod>newdepth-gen)
                         {
                             return 0;
@@ -346,13 +419,13 @@ inline bool check_valid(int newdepth)
             else
             {
                 bool o=true;
-                if(OptionState::slidingcomp.size()||OptionState::staticcomp.size())
+                if(slidingcompsize||staticcompsize)
                 {
-                    if(OptionState::staticcomp.size())
+                    if(staticcompsize)
                     {
                         o*=compare_cell_arrays(newarray, targets[patt], staticcomps[patt], newarray.disp_x-OptionState::staticcompmaskoff[patt].first, newarray.disp_y-OptionState::staticcompmaskoff[patt].second);
                     }
-                    if(OptionState::slidingcomp.size())
+                    if(slidingcompsize)
                     {
                         o*=compare_cell_arrays(newarray, targets[patt], slidingcomps[patt], 0, 0);
                     }

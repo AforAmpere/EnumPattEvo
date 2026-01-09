@@ -311,20 +311,15 @@ bool compare_cell_arrays(CellArray& arr1, CellArray& arr2)
 	return 1;
 }
 
-bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int offx, int offy)
+void find_mask_bounds(CellArray& arr, CellArray& mask, int offx, int offy, int& min_x, int& min_y, int& max_x, int& max_y)
 {
-	int min_x=SMOLL;
-	int min_y=SMOLL;
-	int max_x=LORGE;
-	int max_y=LORGE;
-
 	bool ex=false;
 	
-	for(int i=P_LX(arr1.);i<P_RX(arr1.)&&!ex;i++)
+	for(int i=P_LX(arr.);i<P_RX(arr.)&&!ex;i++)
 	{
-		for(int j=P_LY(arr1.);j<P_RY(arr1.)&&!ex;j++)
+		for(int j=P_LY(arr.);j<P_RY(arr.)&&!ex;j++)
 		{
-			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr1.cells[i][j])
+			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr.cells[i][j])
 			{
 				min_x=i;
 				ex=true;
@@ -333,14 +328,14 @@ bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int 
 	}
 	if(min_x==SMOLL)
 	{
-		return arr2.pop==0;
+		return;
 	}
 	ex=false;
-	for(int j=P_LY(arr1.);j<P_RY(arr1.)&&!ex;j++)
+	for(int j=P_LY(arr.);j<P_RY(arr.)&&!ex;j++)
 	{
-		for(int i=min_x;i<P_RX(arr1.)&&!ex;i++)
+		for(int i=min_x;i<P_RX(arr.)&&!ex;i++)
 		{
-			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr1.cells[i][j])
+			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr.cells[i][j])
 			{
 				min_y=j;
 				ex=true;
@@ -348,11 +343,11 @@ bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int 
 		}
 	}
 	ex=false;
-	for(int j=P_RY(arr1.)-1;j>=min_y&&!ex;j--)
+	for(int j=P_RY(arr.)-1;j>=min_y&&!ex;j--)
 	{
-		for(int i=min_x;i<P_RX(arr1.)&&!ex;i++)
+		for(int i=min_x;i<P_RX(arr.)&&!ex;i++)
 		{
-			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr1.cells[i][j])
+			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr.cells[i][j])
 			{
 				max_y=j;
 				ex=true;
@@ -360,25 +355,46 @@ bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int 
 		}
 	}
 	ex=false;
-	for(int i=P_RX(arr1.)-1;i>=min_x&&!ex;i--)
+	for(int i=P_RX(arr.)-1;i>=min_x&&!ex;i--)
 	{
 		for(int j=min_y;j<max_y+1&&!ex;j++)
 		{
-			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr1.cells[i][j])
+			if(i+offx>=RANGE&&j+offy>=RANGE&&i+offx<RANGE+mask.dims_x&&j+offy<RANGE+mask.dims_y&&mask.cells[i+offx][j+offy]&&arr.cells[i][j])
 			{
 				max_x=i;
 				ex=true;
 			}
 		}
 	}
+}
 
-	if(max_x-min_x+1!=arr2.dims_x||max_y-min_y+1!=arr2.dims_y) return 0;
+bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int offx, int offy)
+{
+	int min_x_1=SMOLL;
+	int min_y_1=SMOLL;
+	int max_x_1=LORGE;
+	int max_y_1=LORGE;
 
-	for(int i=min_x;i<max_x+1;i++)
+	int min_x_2=SMOLL;
+	int min_y_2=SMOLL;
+	int max_x_2=LORGE;
+	int max_y_2=LORGE;
+
+	find_mask_bounds(arr1, mask, offx!=SMOLL?arr1.disp_x+offx:0, offy!=SMOLL?arr1.disp_y+offy:0, min_x_1, min_y_1, max_x_1, max_y_1);
+	find_mask_bounds(arr2, mask, offx!=SMOLL?arr2.disp_x+offx:0, offy!=SMOLL?arr2.disp_y+offy:0, min_x_2, min_y_2, max_x_2, max_y_2);
+
+	int mask_dim_x_1=max_x_1-min_x_1+1;
+	int mask_dim_y_1=max_y_1-min_y_1+1;
+	int mask_dim_x_2=max_x_2-min_x_2+1;
+	int mask_dim_y_2=max_y_2-min_y_2+1;
+
+	if(mask_dim_x_1!=mask_dim_x_2||mask_dim_y_1!=mask_dim_y_2) return 0;
+
+	for(int i=min_x_1;i<max_x_1+1;i++)
 	{
-		for(int j=min_y;j<max_y+1;j++)
+		for(int j=min_y_1;j<max_y_1+1;j++)
 		{
-			if((mask.cells[i+offx][j+offy]&&arr1.cells[i][j]!=arr2.cells[i-min_x+RANGE][j-min_y+RANGE])) return 0;
+			if((mask.cells[i+(offx!=SMOLL?arr1.disp_x+offx:0)][j+(offy!=SMOLL?arr1.disp_y+offy:0)]&&arr1.cells[i][j]!=arr2.cells[i-min_x_1+min_x_2][j-min_y_1+min_y_2])) return 0;
 		}
 	}
 	return 1;

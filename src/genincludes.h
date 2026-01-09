@@ -115,6 +115,7 @@ RuleRep parse_rule(string rulestring);
 string rulestring_from_arr(RuleRep& rule);
 
 //Things that need to be written for a custom symmetry
+void find_mask_bounds(CellArray& arr, CellArray& mask, int offx, int offy, int& min_x, int& min_y, int& max_x, int& max_y);
 bool compare_cell_arrays(CellArray& arr1, CellArray& arr2);
 bool compare_cell_arrays(CellArray& arr1, CellArray& arr2, CellArray& mask, int offx, int offy);
 void evolve(RulespaceRep& rulespace, CellArray& prevarray, CellArray& newarray);
