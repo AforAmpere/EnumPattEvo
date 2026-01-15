@@ -1210,7 +1210,7 @@ bool symmetry_check(CellArray& arr)
 			{
 				for(int j=P_LY(arr.);j<P_RY(arr.);j++)
 				{
-					if (rotcw&&arr.cells[i][j]!=arr.cells[E_Y(arr.)-j-1][i]) rotcw=0;
+					if (rotcw&&(arr.dims_x!=arr.dims_y||arr.cells[i][j]!=arr.cells[E_Y(arr.)-j-1][i])) rotcw=0;
 					if (xflip&&arr.cells[i][j]!=arr.cells[E_X(arr.)-i-1][j]) xflip=0;
 					if (ldaxisflip&&(arr.dims_x!=arr.dims_y||arr.cells[i][j]!=arr.cells[j][i])) ldaxisflip=0;
 				}
