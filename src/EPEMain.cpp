@@ -510,8 +510,27 @@ void print_progress(int currentdepth)
     if(onecount) cout<<"[0/1]"<<(onecount>1?"*"+to_string(onecount):"");
     cout<<endl;
     cout<<"Solutions: "<<solutioncount<<endl;
-    cout<<"Current rule: "<<minimum_rule(rulespace)<<endl;
-    cout<<totalarray[0][currentdepth];
+    cout<<"Current rule: "<<minimum_rule(rulespace)<<endl<<endl;
+    if(pattcount>1)
+    {
+        for(int patt=0;patt<pattcount;patt++)
+        {
+            if(patt!=0) cout<<endl;
+            cout<<"Pattern "<<patt<<endl;
+            if(solvedgens[patt]==-1)
+            {
+                cout<<totalarray[patt][currentdepth]<<endl;
+            }
+            else
+            {
+                cout<<"Completed"<<endl;
+            }
+        }
+    }
+    else
+    {
+        cout<<totalarray[0][currentdepth]<<endl;
+    }
     cout<<"Branches: "<<totalbranches<<endl<<endl;
 }
 
@@ -645,7 +664,9 @@ void branch(int currentdepth)
             //Print tree progress bracket thing and output to file
             if(totalbranches&&totalbranches%OptionState::reporting_interval==0)
             {
+                //cout<<"A"<<endl;
                 outstream<<tmpstring.str();
+                //cout<<"B"<<endl;
                 outstream<<"#"<<totalbranches<<" branches"<<endl;
                 tmpstring.str("");
                 if(OptionState::savefile.size())
@@ -661,7 +682,9 @@ void branch(int currentdepth)
                     }
                     savestream.close();
                 }
+                //cout<<"C"<<endl;
                 print_progress(currentdepth);
+                //cout<<"D"<<endl;
             }
 
             //If all checks pass, recurse
