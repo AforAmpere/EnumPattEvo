@@ -231,19 +231,19 @@ inline bool check_valid(int newdepth)
             }
             if(OptionState::slidingmask.size() && !check_mask(newarray, slidingmasks[patt], 0, 0)) return 0;
             if(OptionState::staticmask.size() && !check_mask(newarray, staticmasks[patt], newarray.disp_x-OptionState::staticmaskoff[patt].first, newarray.disp_y-OptionState::staticmaskoff[patt].second)) return 0;
-            if(newarray.pop<OptionState::prune_minpop[patt]||newarray.pop>OptionState::prune_maxpop[patt])
+            if(newarray.pop<OptionState::prune[patt].get_min("pop")||newarray.pop>OptionState::prune[patt].get_max("pop"))
             {
                 return 0;
             }
-            if(newarray.disp_x<OptionState::prune_mindispx[patt]||newarray.disp_x>OptionState::prune_maxdispx[patt])
+            if(newarray.disp_x<OptionState::prune[patt].get_min("dx")||newarray.disp_x>OptionState::prune[patt].get_max("dx"))
             {
                 return 0;
             }
-            if(newarray.disp_y<OptionState::prune_mindispy[patt]||newarray.disp_y>OptionState::prune_maxdispy[patt])
+            if(newarray.disp_y<OptionState::prune[patt].get_min("dy")||newarray.disp_y>OptionState::prune[patt].get_max("dy"))
             {
                 return 0;
             }
-            if(comm<OptionState::prune_mincomm[patt]||comm>OptionState::prune_maxcomm[patt])
+            if(comm<OptionState::prune[patt].get_min("c")||comm>OptionState::prune[patt].get_max("c"))
             {
                 return 0;
             }
@@ -262,19 +262,42 @@ inline bool check_valid(int newdepth)
                 {
                     return 0;
                 }
-                if(newarray.disp_x<OptionState::filter_mindispx[patt]||newarray.disp_x>OptionState::filter_maxdispx[patt])
+                int tmp;
+                int minpop=(LORGE);
+                int maxpop=(SMOLL);
+                for(int j=0;j<newdepth;j++)
+                {
+                    tmp = totalarray[patt][j].pop;
+                    if(tmp<minpop)
+                    {
+                        minpop=tmp;
+                    }
+                    if(tmp>maxpop)
+                    {
+                        maxpop=tmp;
+                    }
+                }
+                if(minpop<OptionState::filter[patt].get_min("minpop")||minpop>OptionState::filter[patt].get_max("minpop"))
                 {
                     return 0;
                 }
-                if(newarray.disp_y<OptionState::filter_mindispy[patt]||newarray.disp_y>OptionState::filter_maxdispy[patt])
+                if(maxpop<OptionState::filter[patt].get_min("maxpop")||maxpop>OptionState::filter[patt].get_max("maxpop"))
                 {
                     return 0;
                 }
-                if(newarray.pop<OptionState::filter_minpop[patt]||newarray.pop>OptionState::filter_maxpop[patt])
+                if(newdepth<OptionState::filter[patt].get_min("p")||newdepth>OptionState::filter[patt].get_max("p"))
                 {
                     return 0;
                 }
-                if(comm<OptionState::filter_mincomm[patt]||comm>OptionState::filter_maxcomm[patt])
+                if(newarray.disp_x<OptionState::filter[patt].get_min("dx")||newarray.disp_x>OptionState::filter[patt].get_max("dx"))
+                {
+                    return 0;
+                }
+                if(newarray.disp_y<OptionState::filter[patt].get_min("dy")||newarray.disp_y>OptionState::filter[patt].get_max("dy"))
+                {
+                    return 0;
+                }
+                if(comm<OptionState::filter[patt].get_min("c")||comm>OptionState::filter[patt].get_max("c"))
                 {
                     return 0;
                 }
@@ -290,9 +313,11 @@ inline bool check_valid(int newdepth)
 
     for(int patt=0;patt<pattcount;patt++)
     {
+        //Not solved yet
         if(solvedgens[patt]==-1)
         {
             CellArray& newarray = totalarray[patt][newdepth];
+            //No -t pattern
             if(patt>=targetcount)
             {
                 for(int gen=0;gen<newdepth;gen++)
@@ -306,12 +331,7 @@ inline bool check_valid(int newdepth)
                         }
                         if(slidingcompsize)
                         {
-                            //cout<<gen<<endl;
                             o*=compare_cell_arrays(newarray, totalarray[patt][gen], slidingcomps[patt], SMOLL, SMOLL);
-                            // if(o)
-                            // {
-                            //     cout<<"hi"<<endl;
-                            // }
                         }
                         if(!o)
                         {
@@ -365,7 +385,7 @@ inline bool check_valid(int newdepth)
                             adisp_x=newarray.disp_x-totalarray[patt][gen].disp_x;
                             adisp_y=newarray.disp_y-totalarray[patt][gen].disp_y; 
                         }
-                        if(OptionState::minperiod>newdepth-gen)
+                        if(newdepth-gen<OptionState::filter[patt].get_min("p")||newdepth-gen>OptionState::filter[patt].get_max("p"))
                         {
                             return 0;
                         }
@@ -373,42 +393,51 @@ inline bool check_valid(int newdepth)
                         {
                             return 0;
                         }
-                        if(adisp_x<OptionState::filter_mindispx[patt]||adisp_x>OptionState::filter_maxdispx[patt])
+                        if(adisp_x<OptionState::filter[patt].get_min("dx")||adisp_x>OptionState::filter[patt].get_max("dx"))
                         {
                             return 0;
                         }
-                        if(adisp_y<OptionState::filter_mindispy[patt]||adisp_y>OptionState::filter_maxdispy[patt])
+                        if(adisp_y<OptionState::filter[patt].get_min("dy")||adisp_y>OptionState::filter[patt].get_max("dy"))
                         {
                             return 0;
                         }
-                        if(comm<OptionState::filter_mincomm[patt]||comm>OptionState::filter_maxcomm[patt])
+                        if(comm<OptionState::filter[patt].get_min("c")||comm>OptionState::filter[patt].get_max("c"))
                         {
                             return 0;
                         }
                         int tmp;
-                        int mpop=(LORGE);
+                        int minpop=(LORGE);
+                        int maxpop=(SMOLL);
                         for(int j=gen;j<newdepth;j++)
                         {
                             tmp = totalarray[patt][j].pop;
-                            if(tmp<mpop)
+                            if(tmp<minpop)
                             {
-                                mpop=tmp;
+                                minpop=tmp;
+                            }
+                            if(tmp>maxpop)
+                            {
+                                maxpop=tmp;
                             }
                         }
-                        if(mpop<OptionState::filter_minpop[patt]||mpop>OptionState::filter_maxpop[patt])
+                        if(minpop<OptionState::filter[patt].get_min("minpop")||minpop>OptionState::filter[patt].get_max("minpop"))
+                        {
+                            return 0;
+                        }
+                        if(maxpop<OptionState::filter[patt].get_min("maxpop")||maxpop>OptionState::filter[patt].get_max("maxpop"))
                         {
                             return 0;
                         }
                         if(OptionState::sssssmode && newdepth-gen)
                         {
                             string c = canonized_speed(adisp_x,adisp_y,newdepth-gen);
-                            if(ssssstable.count(c) && ssssstable[c]<=mpop)
+                            if(ssssstable.count(c) && ssssstable[c]<=minpop)
                             {
                                 return 0;
                             }
                             else
                             {
-                                ssssstable[c]=mpop;
+                                ssssstable[c]=minpop;
                             }
                         }
                         solvedgens[patt]=newdepth;
@@ -416,6 +445,7 @@ inline bool check_valid(int newdepth)
                     }
                 }
             }
+            //-t pattern
             else
             {
                 bool o=true;
@@ -444,19 +474,42 @@ inline bool check_valid(int newdepth)
                     {
                         return 0;
                     }
-                    if(newarray.disp_x<OptionState::filter_mindispx[patt]||newarray.disp_x>OptionState::filter_maxdispx[patt])
+                    int tmp;
+                    int minpop=(LORGE);
+                    int maxpop=(SMOLL);
+                    for(int j=0;j<newdepth;j++)
+                    {
+                        tmp = totalarray[patt][j].pop;
+                        if(tmp<minpop)
+                        {
+                            minpop=tmp;
+                        }
+                        if(tmp>maxpop)
+                        {
+                            maxpop=tmp;
+                        }
+                    }
+                    if(minpop<OptionState::filter[patt].get_min("minpop")||minpop>OptionState::filter[patt].get_max("minpop"))
                     {
                         return 0;
                     }
-                    if(newarray.disp_y<OptionState::filter_mindispy[patt]||newarray.disp_y>OptionState::filter_maxdispy[patt])
+                    if(maxpop<OptionState::filter[patt].get_min("maxpop")||maxpop>OptionState::filter[patt].get_max("maxpop"))
                     {
                         return 0;
                     }
-                    if(newarray.pop<OptionState::filter_minpop[patt]||newarray.pop>OptionState::filter_maxpop[patt])
+                    if(newdepth<OptionState::filter[patt].get_min("p")||newdepth>OptionState::filter[patt].get_max("p"))
                     {
                         return 0;
                     }
-                    if(comm<OptionState::filter_mincomm[patt]||comm>OptionState::filter_maxcomm[patt])
+                    if(newarray.disp_x<OptionState::filter[patt].get_min("dx")||newarray.disp_x>OptionState::filter[patt].get_max("dx"))
+                    {
+                        return 0;
+                    }
+                    if(newarray.disp_y<OptionState::filter[patt].get_min("dy")||newarray.disp_y>OptionState::filter[patt].get_max("dy"))
+                    {
+                        return 0;
+                    }
+                    if(comm<OptionState::filter[patt].get_min("c")||comm>OptionState::filter[patt].get_max("c"))
                     {
                         return 0;
                     }
@@ -884,6 +937,9 @@ int main(int argc, char** argv)
         cout<<"You may be loading INT speeds in a non-INT rulespace, beware!"<<endl;
         #endif
     }
+
+    // comm=0;
+    // for(int i=0;i<TRANSCOUNT;i++) if(rulespace[i][0]>0) comm++;
 
     branch(0);
     outstream<<tmpstring.str();

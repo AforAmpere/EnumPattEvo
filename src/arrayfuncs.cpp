@@ -330,6 +330,8 @@ ostream& operator<< (ostream& os, RulespaceRep& arr)
 	return os;
 }
 
+//Rulespaces are an array of vectors of valid possible future states for a given transition
+//The first element is set to -(state) if the transition is fixed and goes to (state)
 RulespaceRep rulespace_from_rules(vector<RuleRep>& rules)
 {
     RulespaceRep out;

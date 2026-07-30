@@ -40,6 +40,67 @@ enum print_mode
 
 extern print_mode cellprintmode;
 
+template<class T>
+void add_keys_message_pair(unordered_map<string,T>& map, initializer_list<string> keys, T message)
+{
+    for(const string& s:keys) map[s] = message;
+}
+
+struct NumericalConditions
+{
+    unordered_map<string,pair<int,int>> conditions;
+    vector<string> conditionlist;
+
+    NumericalConditions(string type)
+    {
+        if(type == "prune")
+        {
+            add("pop",0,LORGE);
+            add("dx",SMOLL,LORGE);
+            add("dy",SMOLL,LORGE);
+            add("c",0,TRANSCOUNT);
+        }
+        else if(type == "filter")
+        {
+            add("minpop",0,LORGE);
+            add("maxpop",0,LORGE);
+            add("p",0,LORGE);
+            add("dx",SMOLL,LORGE);
+            add("dy",SMOLL,LORGE);
+            add("c",0,TRANSCOUNT);
+        }
+    }
+
+    int get_min(string condition)
+    {
+        return conditions.at(condition).first;
+    }
+
+    int get_max(string condition)
+    {
+        return conditions.at(condition).second;
+    }
+
+    void set_min(string condition, int min)
+    {
+        conditions[condition].first = min;
+    }
+
+    void set_max(string condition, int max)
+    {
+        conditions[condition].second = max;
+    }
+
+    void add(string condition, int min, int max)
+    {
+        conditions[condition] = pair<int,int>();
+        conditionlist.push_back(condition);
+        set_min(condition,min);
+        set_max(condition,max);
+    }
+
+};
+
 struct OptionState
 {
     static vector<string> startingpatterns;
@@ -54,22 +115,8 @@ struct OptionState
     static string filename;
     static int reporting_interval;
     static bool sssssmode;
-    static vector<int> prune_minpop;
-    static vector<int> prune_maxpop;
-    static vector<int> prune_mindispx;
-    static vector<int> prune_maxdispx;
-    static vector<int> prune_mindispy;
-    static vector<int> prune_maxdispy;
-    static vector<int> prune_mincomm;
-    static vector<int> prune_maxcomm;
-    static vector<int> filter_minpop;
-    static vector<int> filter_maxpop;
-    static vector<int> filter_mindispx;
-    static vector<int> filter_maxdispx;
-    static vector<int> filter_mindispy;
-    static vector<int> filter_maxdispy;
-    static vector<int> filter_mincomm;
-    static vector<int> filter_maxcomm;
+    static vector<NumericalConditions> prune;
+    static vector<NumericalConditions> filter;
     static bool append;
     static vector<int> nosymm;
     static vector<int> noexp;
