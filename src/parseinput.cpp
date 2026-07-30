@@ -152,7 +152,7 @@ will filter results during their entire period. Filters are specified by giving 
 For example, confining the displacement in the x direction between -5 and 6 could be done like -5<=dx<=6 or -6<dx<7, or -6<dx<=6 as some of the ways. The \
 parameters of population, displacement in x, and displacement in y are represented by minpop, maxpop, p, dx, dy, and c. Inequalities must be specified with no spaces. \
 The nth filter applies to the nth pattern. To specify filters for later patterns but not earlier ones, just give '' as a filter for the earlier.\n\n\
-Example: --filter 'p<10 dx<-1' '' 'dy>=3'\n\
+Example: --filter 'minpop<10 dx<-1' '' 'dy>=3'\n\
 Results for the first pattern must have a minimum pop <10 and a displacement through its period (or end displacement for -t) more than -1 in the x direction. \
 For the second no filter is specified. For the third, it must move by 3 or more in the y direction."
 );
@@ -163,7 +163,7 @@ commonness are currently supported. This is specified by giving an inequality to
 the x direction between -5 and 6 could be done like -5<=dx<=6 or -6<dx<7, or -6<dx<=6 as some of the ways. \
 The parameters of population, displacement in x, displacement in y, and commonness are represented by pop, dx, dy, and c. Inequalities must be specified with \
 no spaces. The nth prune applies to the nth pattern. To specify prunings for later patterns but not earlier ones, just give '' for the earlier.\n\n\
-Example: --prune 'p<10 dx<11' '' 'dy>=-1'\n\
+Example: --prune 'pop<10 dx<11' '' 'dy>=-1'\n\
 At all times for the first pattern must have a pop <10 and a displacement less than 11 in the x direction. \
 For the second no pruning is specified. For the third, it must have moved by -1 or more in the y direction from the starting position at all times."
 );
